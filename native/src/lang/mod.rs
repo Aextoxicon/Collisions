@@ -1,0 +1,49 @@
+use std::sync::LazyLock;
+
+// 宏：消除每个语言文件中的模板代码（LazyLock + GrammarDef 构造）
+// 用法：
+//   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY)
+//   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY, OUTLINE_QUERY)
+macro_rules! grammar {
+    ($lang:expr, $highlight:ident) => {
+        ::std::sync::LazyLock::new(|| $crate::lang::GrammarDef {
+            language: $lang,
+            highlight_query: $highlight,
+            outline_query: "",
+        })
+    };
+    ($lang:expr, $highlight:ident, $outline:ident) => {
+        ::std::sync::LazyLock::new(|| $crate::lang::GrammarDef {
+            language: $lang,
+            highlight_query: $highlight,
+            outline_query: $outline,
+        })
+    };
+}
+
+mod go;
+mod python;
+mod javascript;
+mod typescript;
+mod bash;
+mod csharp;
+
+pub struct GrammarDef {
+    pub language: tree_sitter::Language,
+    pub highlight_query: &'static str,
+    pub outline_query: &'static str,
+}
+
+// 按文件扩展名查找对应的 grammar 定义
+pub fn get_grammar(ext: &str) -> Option<&'static LazyLock<GrammarDef>> {
+    match ext {
+        ".go" => Some(&go::GRAMMAR),
+        ".py" => Some(&python::GRAMMAR),
+        ".js" | ".mjs" | ".cjs" => Some(&javascript::GRAMMAR),
+        ".ts" => Some(&typescript::GRAMMAR_TS),
+        ".tsx" => Some(&typescript::GRAMMAR_TSX),
+        ".sh" | ".bash" | ".zsh" => Some(&bash::GRAMMAR),
+        ".cs" => Some(&csharp::GRAMMAR),
+        _ => None,
+    }
+}
