@@ -90,9 +90,11 @@ class TreeItemViewModel(
                 val listResult = r.listAsync(payload.absolutePath)
                 listResult.getOrNull() ?: emptyList()
             }
+            // 文件夹在前，然后按文件名排序
+            val sorted = items.sortedWith(compareBy({ !((it.payload as? LocalPayload)?.isDir ?: false) }, { it.name.lowercase() }))
             // 替换为真实子节点
             children.clear()
-            for (child in items) {
+            for (child in sorted) {
                 children.add(TreeItemViewModel(child, r, cache))
             }
             // 空目录：保留占位符，保证箭头始终显示
