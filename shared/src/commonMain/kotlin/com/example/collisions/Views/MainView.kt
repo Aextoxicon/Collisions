@@ -256,7 +256,7 @@ private fun getFileIcon(extension: String): ImageVector {
 private fun CodePreviewPanel(viewModel: MainViewModel, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         if (!viewModel.hasSelection) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.AutoMirrored.Filled.InsertDriveFile,
@@ -309,7 +309,7 @@ private fun CodeContentView(content: String, parseResult: CodeParseResult?) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(Color(0xFF282C34)).horizontalScroll(scrollState).padding(16.dp),
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).horizontalScroll(scrollState).padding(16.dp),
     ) {
         SelectionContainer {
             Text(text = annotatedString, fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 20.sp)
@@ -319,7 +319,7 @@ private fun CodeContentView(content: String, parseResult: CodeParseResult?) {
 
 @Composable
 private fun MessageView(message: String) {
-    Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(32.dp), contentAlignment = Alignment.Center) {
         Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

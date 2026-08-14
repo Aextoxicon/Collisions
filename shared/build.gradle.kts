@@ -5,7 +5,6 @@ val nativeProjectDir = rootProject.file("native")
 val nativeTargetDir = nativeProjectDir.resolve("target")
 val nativeLibName = "uniffi_code_parser"
 val jvmNativeLib = nativeTargetDir.resolve("debug/lib${nativeLibName}.dylib")
-val jvmNativeLibRelease = nativeTargetDir.resolve("release/lib${nativeLibName}.dylib")
 val uniffiKotlinOutDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
 
 // 构建 Rust 库 (debug)
@@ -17,17 +16,6 @@ val cargoBuildJvm by tasks.registering(Exec::class) {
     inputs.dir(nativeProjectDir.resolve("src"))
     inputs.file(nativeProjectDir.resolve("Cargo.toml"))
     outputs.file(jvmNativeLib)
-}
-
-// 构建 Rust 库 (release)
-val cargoBuildJvmRelease by tasks.registering(Exec::class) {
-    group = "uniffi"
-    description = "Build Rust native library for JVM (release)"
-    workingDir = nativeProjectDir
-    commandLine("cargo", "build", "--release")
-    inputs.dir(nativeProjectDir.resolve("src"))
-    inputs.file(nativeProjectDir.resolve("Cargo.toml"))
-    outputs.file(jvmNativeLibRelease)
 }
 
 // 复制 JVM 原生库到 build 输出目录
@@ -45,14 +33,23 @@ val copyJvmNativeLib by tasks.registering(Copy::class) {
 val generateUniffiKotlinBindings by tasks.registering(Exec::class) {
     group = "uniffi"
     description = "Generate Kotlin Multiplatform bindings from Rust library using uniffi-bindgen"
-    dependsOn(cargoBuildJvm)
     workingDir = nativeProjectDir
     val outDir = uniffiKotlinOutDir.get().asFile
+    val nativeLibPath = jvmNativeLib.absolutePath
     outputs.dir(outDir)
-    doFirst { outDir.mkdirs() }
+    doFirst {
+        // cargo构建仅在构建时触发
+        if (!File(nativeLibPath).exists()) {
+            throw GradleException(
+                "Rust native library not found: $nativeLibPath\n" +
+                    "Please run './gradlew build' first to build the Rust library."
+            )
+        }
+        outDir.mkdirs()
+    }
     commandLine(
         "uniffi-bindgen", "generate",
-        "--library", jvmNativeLib.absolutePath,
+        "--library", nativeLibPath,
         "--language", "kotlin",
         "--out-dir", outDir.absolutePath
     )
@@ -122,7 +119,6 @@ kotlin {
                 implementation(libs.jna)
                 implementation(libs.jna.platform)
                 implementation(libs.compose.uiToolingPreview)
-                implementation(libs.compose.uiTooling)
             }
         }
         commonTest.dependencies {
@@ -155,6 +151,3 @@ tasks.named("assemble") {
     dependsOn(copyJvmNativeLib)
 }
 
-dependencies {
-    androidRuntimeClasspath(libs.compose.uiTooling)
-}

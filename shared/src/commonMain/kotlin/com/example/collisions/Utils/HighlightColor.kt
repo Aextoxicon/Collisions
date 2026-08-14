@@ -10,25 +10,25 @@ import com.example.collisions.Processing.HighlightToken
 import com.example.collisions.Processing.OutlineNode
 
 object HighlightColor {
-    // 颜色定义（基于 One Dark Pro 配色）
-    val keyword = Color(0xFFC678DD)        // 紫色 - 关键字（if, else, return, import...）
-    val string = Color(0xFF98C379)         // 绿色 - 字符串字面量
-    val comment = Color(0xFF5C6370)        // 灰蓝 - 注释
-    val function = Color(0xFF61AFEF)       // 蓝色 - 函数名
-    val functionBuiltin = Color(0xFF56B6C2) // 青色 - 内置函数
-    val functionMethod = Color(0xFFD19A66)  // 橙色 - 方法名
-    val type = Color(0xFFE5C07B)           // 黄色 - 类型名
-    val number = Color(0xFFD19A66)         // 橙色 - 数字
-    val operator = Color(0xFFABB2BF)       // 浅灰 - 运算符
-    val identifier = Color(0xFFE06C75)     // 红色 - 标识符
-    val variable = Color(0xFFE06C75)       // 红色 - 变量
-    val property = Color(0xFFE06C75)       // 红色 - 属性
-    val punctuation = Color(0xFFABB2BF)    // 浅灰 - 标点符号
-    val escape = Color(0xFF56B6C2)         // 青色 - 转义字符
-    val constantBuiltin = Color(0xFFE5C07B) // 黄色 - 内置常量（null, true, false...）
-    val label = Color(0xFFE06C75)           // 红色 - 标签
-    val namespace = Color(0xFFE5C07B)        // 黄色 - 命名空间
-    val plainText = Color(0xFFABB2BF)        // 浅灰 - 纯文本默认颜色
+    val keyword = Color(0xFFD73A49)
+    val string = Color(0xFF09622A)
+    val comment = Color(0xFF6A737D)
+    val function = Color(0xFF8250DF)
+    val functionBuiltin = Color(0xFF005CC5)
+    val functionMethod = Color(0xFF6F42C1)
+    val type = Color(0xFF6F42C1)
+    val number = Color(0xFF0550AE)
+    val operator = Color(0xFFD73A49)
+    val identifier = Color(0xFF24292E)
+    val variable = Color(0xFFE36209)
+    val property = Color(0xFFEC09BE)
+    val punctuation = Color(0xFF24292E)
+    val escape = Color(0xFFE36209)
+    val constantBuiltin = Color(0xFF953800)
+    val label = Color(0xFFE36209)
+    val namespace = Color(0xFF28A745)
+    val builtin = Color(0xFF6F42C1)
+    val plainText = Color(0xFF24292E)
 
     private val colorMap: Map<String, Color> = mapOf(
         "keyword" to keyword,
@@ -40,6 +40,7 @@ object HighlightColor {
         "type" to type,
         "number" to number,
         "operator" to operator,
+        "builtin" to builtin,
         "identifier" to identifier,
         "variable" to variable,
         "property" to property,
