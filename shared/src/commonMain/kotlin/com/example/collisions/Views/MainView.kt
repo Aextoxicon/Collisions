@@ -309,7 +309,11 @@ private fun CodeContentView(content: String, parseResult: CodeParseResult?) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).horizontalScroll(scrollState).padding(16.dp),
+        modifier = Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+            .horizontalScroll(scrollState)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
     ) {
         SelectionContainer {
             Text(text = annotatedString, fontFamily = FontFamily.Monospace, fontSize = 13.sp, lineHeight = 20.sp)
