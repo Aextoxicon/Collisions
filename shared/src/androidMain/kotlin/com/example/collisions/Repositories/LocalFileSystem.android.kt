@@ -1,75 +1,54 @@
 package com.example.collisions.Repositories
 
-import java.io.File
-import java.io.FileInputStream
+import android.content.ContentResolver
+import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.documentfile.provider.DocumentFile
+import com.example.collisions.AndroidContext
 import java.io.FileNotFoundException
 
+// 基于SAF
 actual class LocalFileSystem {
+    private val contentResolver: ContentResolver
+        get() = AndroidContext.context.contentResolver
+
     actual fun listFiles(path: String): List<LocalFileInfo> {
-        val dir = File(path)
-        if (!dir.exists() || !dir.isDirectory) return emptyList()
-        return dir.listFiles()?.mapNotNull { item ->
-            try {
-                LocalFileInfo(
-                    path = item.absolutePath,
-                    name = item.name,
-                    parentPath = dir.absolutePath,
-                    isDir = item.isDirectory,
-                    size = if (item.isDirectory) countDirChildren(item.absolutePath) else item.length(),
-                    lastMod = item.lastModified() / 1000L,
-                    extension = if (item.isDirectory) "" else item.extension.lowercase(),
-                )
-            } catch (_: SecurityException) {
-                null
-            }
-        }?.toList() ?: emptyList()
+        val treeUri = Uri.parse(path)
+        val docFile = DocumentFile.fromTreeUri(AndroidContext.context, treeUri)
+            ?: return emptyList()
+        val children = docFile.listFiles()
+        val parentUri = treeUri.toString()
+        return children.mapNotNull { item ->
+            mapDocumentFile(item, parentUri)
+        }
     }
 
     actual fun fileInfo(path: String): LocalFileInfo {
-        val file = File(path)
-        if (!file.exists()) {
-            val dir = File(path)
-            if (dir.exists() && dir.isDirectory) {
-                return LocalFileInfo(
-                    path = dir.absolutePath,
-                    name = dir.name,
-                    parentPath = dir.parent ?: "",
-                    isDir = true,
-                    size = countDirChildren(path),
-                    lastMod = dir.lastModified() / 1000L,
-                    extension = "",
-                )
-            }
-            throw FileNotFoundException("文件或目录不存在: $path")
-        }
-        return LocalFileInfo(
-            path = file.absolutePath,
-            name = file.name,
-            parentPath = file.parent ?: "",
-            isDir = false,
-            size = file.length(),
-            lastMod = file.lastModified() / 1000L,
-            extension = file.extension.lowercase(),
-        )
+        val uri = Uri.parse(path)
+        val docFile = DocumentFile.fromSingleUri(AndroidContext.context, uri)
+            ?: throw FileNotFoundException("文件或目录不存在: $path")
+        return mapDocumentFile(docFile, docFile.parentFile?.uri?.toString() ?: "")
+            ?: throw FileNotFoundException("无法解析文件信息: $path")
     }
 
     actual fun isTextFile(path: String): Boolean {
-        val ext = File(path).extension.lowercase()
-        val name = File(path).name.lowercase()
+        val uri = Uri.parse(path)
+        val ext = getExtension(uri)
+        val name = getName(uri)
 
         if (ext in textExtensions) return true
         if (name in textFileNames) return true
 
         // 空字节检测：读取前 16KB，含 \0 则视为二进制
         return try {
-            FileInputStream(path).use { fis ->
+            contentResolver.openInputStream(uri)?.use { input ->
                 val buffer = ByteArray(16384)
-                val bytesRead = fis.read(buffer)
+                val bytesRead = input.read(buffer)
                 for (i in 0 until bytesRead) {
                     if (buffer[i] == 0.toByte()) return false
                 }
                 true
-            }
+            } ?: false
         } catch (_: Exception) {
             false
         }
@@ -77,11 +56,12 @@ actual class LocalFileSystem {
 
     actual fun tryReadText(path: String): String? {
         return try {
-            val file = File(path)
-            if (!file.exists() || !file.isFile) return null
+            val uri = Uri.parse(path)
             if (!isTextFile(path)) return null
-            val content = file.readText()
-            if (content.contains('\u0000')) null else content
+            contentResolver.openInputStream(uri)?.use { input ->
+                val text = input.bufferedReader().readText()
+                if (text.contains('\u0000')) null else text
+            }
         } catch (_: Exception) {
             null
         }
@@ -89,27 +69,55 @@ actual class LocalFileSystem {
 
     actual fun delete(path: String): Boolean {
         return try {
-            val file = File(path)
-            if (file.isDirectory) {
-                file.deleteRecursively()
-            } else {
-                file.delete()
-            }
+            val uri = Uri.parse(path)
+            val docFile = DocumentFile.fromSingleUri(AndroidContext.context, uri)
+            docFile?.delete() ?: false
         } catch (_: SecurityException) {
             false
         }
     }
 
     actual fun toUri(path: String): String {
-        return File(path).toURI().toString()
+        // 已经是 content:// URI
+        return path
     }
 
-    private fun countDirChildren(dirPath: String): Long {
+    private fun mapDocumentFile(docFile: DocumentFile, parentUri: String): LocalFileInfo? {
         return try {
-            File(dirPath).list()?.size?.toLong() ?: 0L
-        } catch (_: Exception) {
-            0L
+            val name = docFile.name ?: return null
+            val isDir = docFile.isDirectory
+            LocalFileInfo(
+                path = docFile.uri.toString(),
+                name = name,
+                parentPath = parentUri,
+                isDir = isDir,
+                size = if (isDir) docFile.listFiles().size.toLong() else docFile.length(),
+                lastMod = docFile.lastModified() / 1000L,
+                extension = if (isDir) "" else name.substringAfterLast('.', "").lowercase(),
+            )
+        } catch (_: SecurityException) {
+            null
         }
+    }
+
+    private fun getExtension(uri: Uri): String {
+        val name = getName(uri)
+        return name.substringAfterLast('.', "").lowercase()
+    }
+
+    private fun getName(uri: Uri): String {
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use { c ->
+            if (c.moveToFirst()) {
+                val nameIndex = c.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                if (nameIndex >= 0) {
+                    return c.getString(nameIndex) ?: ""
+                }
+            }
+        }
+        // fallback: 从 URI 路径中提取
+        val path = uri.path ?: ""
+        return path.substringAfterLast('/')
     }
 
     companion object {

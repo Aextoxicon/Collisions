@@ -113,6 +113,7 @@ kotlin {
                 implementation(libs.jna)
                 implementation(libs.jna.platform)
                 implementation(libs.compose.uiToolingPreview)
+                implementation(libs.androidx.documentfile)
             }
         }
         commonTest.dependencies {
