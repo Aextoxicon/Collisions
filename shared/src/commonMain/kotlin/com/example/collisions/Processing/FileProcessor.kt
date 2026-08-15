@@ -1,8 +1,9 @@
 package com.example.collisions.Processing
 
 object FileProcessor {
-    private val rustSupportedExtensions = setOf(
-        "go", "py", "js", "mjs", "cjs", "ts", "tsx", "sh", "bash", "zsh", "cs",
+    private val rustSupportExt = setOf(
+        "go", "py", "js", "mjs", "cjs", "ts", "tsx", "sh", "bash", "zsh", "cs", "json", "rs", "css",
+        "c", "h", "cpp", "cc", "cxx", "hpp", "java",
     )
 
     fun process(content: String, extension: String): CodeParseResult {
@@ -25,7 +26,7 @@ object FileProcessor {
 
     private fun normalizeForRust(extension: String): String? {
         val clean = extension.lowercase().trimStart('.')
-        return if (clean in rustSupportedExtensions) ".$clean" else null
+        return if (clean in rustSupportExt) ".$clean" else null
     }
 
     private fun mapLanguage(extension: String): String = when (extension.lowercase().trimStart('.')) {

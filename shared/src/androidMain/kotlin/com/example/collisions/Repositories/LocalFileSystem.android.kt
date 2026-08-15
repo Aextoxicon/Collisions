@@ -36,7 +36,7 @@ actual class LocalFileSystem {
         val ext = getExtension(uri)
         val name = getName(uri)
 
-        if (ext in textExtensions) return true
+        if (ext in textExt) return true
         if (name in textFileNames) return true
 
         // 空字节检测：读取前 16KB，含 \0 则视为二进制
@@ -121,7 +121,7 @@ actual class LocalFileSystem {
     }
 
     companion object {
-        private val textExtensions = setOf(
+        private val textExt = setOf(
             "txt", "md", "markdown", "json", "xml", "yaml", "yml",
             "cs", "js", "ts", "jsx", "tsx", "py", "java", "kt",
             "kts", "swift", "c", "cpp", "h", "hpp", "css", "scss",

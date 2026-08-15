@@ -83,72 +83,87 @@ pub struct CodeParseResult {
     pub outline: Vec<OutlineNode>,
 }
 
-// 构建 UTF-8 字节偏移 → UTF-16 代码单元偏移的映射表
-fn build_byte_to_utf16_map(source: &str) -> Option<Vec<u32>> {
-    let n = source.len();
-    if n == 0 {
-        return Some(vec![0]);
-    }
-    // 纯ASCII文件：byte offset == UTF-16 code unit offset
+struct ScanSource {
+    line_boundaries: Vec<(u64, u64)>,
+    /// UTF-8 字节偏移转UTF-16偏移的映射表，若源文件纯ASCII则为None
+    byte_to_utf16_map: Option<Vec<u32>>,
+}
+
+/// 单次遍历源文件，同时构建行边界和 UTF-16 映射表
+fn scan_source(source: &str) -> ScanSource {
+    // 快速路径：纯 ASCII — 字节偏移 == UTF-16 偏移，无需映射表
     if source.is_ascii() {
-        return None;
+        let mut boundaries = Vec::new();
+        let mut line_start: u64 = 0;
+        for (i, &b) in source.as_bytes().iter().enumerate() {
+            if b == b'\n' {
+                let pos = (i + 1) as u64;
+                boundaries.push((line_start, pos));
+                line_start = pos;
+            }
+        }
+        let len = source.len() as u64;
+        if line_start < len || (line_start == len && line_start > 0) {
+            boundaries.push((line_start, len));
+        }
+        return ScanSource {
+            line_boundaries: boundaries,
+            byte_to_utf16_map: None,
+        };
     }
+
+    // 非ASCII单次遍历同时构建映射表+行边界
+    let n = source.len();
     let mut map = Vec::with_capacity(n + 1);
-    let mut utf16_pos: u32 = 0;
+    let mut boundaries = Vec::new();
+    let mut line_start: u64 = 0;
+    let mut utf16_pos: u64 = 0;
     for ch in source.chars() {
-        let utf16_len = ch.len_utf16() as u32;
+        let utf16_len = ch.len_utf16() as u64;
         for _ in 0..ch.len_utf8() {
-            map.push(utf16_pos);
+            map.push(utf16_pos as u32);
         }
         utf16_pos += utf16_len;
+        if ch == '\n' {
+            boundaries.push((line_start, utf16_pos));
+            line_start = utf16_pos;
+        }
     }
-    map.push(utf16_pos); // 文件尾位置
-    Some(map)
+    map.push(utf16_pos as u32);
+    if line_start < utf16_pos || (line_start == utf16_pos && line_start > 0) {
+        boundaries.push((line_start, utf16_pos));
+    }
+    ScanSource {
+        line_boundaries: boundaries,
+        byte_to_utf16_map: Some(map),
+    }
 }
 
 fn map_byte(map: &[u32], byte_pos: u64) -> u64 {
     map.get(byte_pos as usize).copied().unwrap_or(0) as u64
 }
 
-fn convert_highlights(map: &[u32], highlights: &mut [HighlightToken]) {
+fn convert_highlights(map: Option<&[u32]>, highlights: &mut [HighlightToken]) {
+    let Some(map) = map else { return };
     for h in highlights {
         h.start_byte = map_byte(map, h.start_byte);
         h.end_byte = map_byte(map, h.end_byte);
     }
 }
 
-fn convert_outline(map: &[u32], outline: &mut [OutlineNode]) {
+fn convert_outline(map: Option<&[u32]>, outline: &mut [OutlineNode]) {
+    let Some(map) = map else { return };
     for node in outline {
         node.start_byte = map_byte(map, node.start_byte);
         node.end_byte = map_byte(map, node.end_byte);
-        convert_outline(map, &mut node.children);
+        convert_outline(Some(map), &mut node.children);
     }
 }
 
 fn split_highlights_by_line(
-    source: &str,
+    line_boundaries: &[(u64, u64)],
     highlights: &[HighlightToken],
 ) -> Vec<Vec<HighlightToken>> {
-    // 先计算每行的起始和结束 UTF-16 offset
-    let mut line_boundaries: Vec<(u64, u64)> = Vec::new();
-    let mut line_start: u64 = 0;
-    let mut pos: u64 = 0; // 独立的遍历游标
-    for ch in source.chars() {
-        let utf16_len = ch.len_utf16() as u64;
-        pos += utf16_len;
-        if ch == '\n' {
-            // 行结束（包含换行符），下一行从换行符后开始
-            line_boundaries.push((line_start, pos));
-            line_start = pos;
-        }
-    }
-    //最后一行（如果文件末尾没有换行符）
-    if line_start < pos {
-        line_boundaries.push((line_start, pos));
-    } else if line_start == pos && line_start > 0 {
-        line_boundaries.push((line_start, pos));
-    }
-
     let line_count = line_boundaries.len();
     if line_count == 0 {
         return Vec::new();
@@ -262,7 +277,7 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     );
     debug_log!("[RUST] query capture names: {:?}", query.capture_names());
 
-    let highlights = {
+    let mut highlights = {
         let mut qc = QueryCursor::new();
         let mut results = Vec::new();
         let mut matches = qc.matches(&query, tree.root_node(), source.as_bytes());
@@ -314,15 +329,12 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
         outline,
     };
 
-    //转为UTF-16
-    let mut highlights = highlights;
-    if let Some(map) = build_byte_to_utf16_map(&source) {
-        convert_highlights(&map, &mut highlights);
-        convert_outline(&map, &mut result.outline);
-    }
-    // 如果 map 是 None（纯 ASCII），offsets 保持不变
+    // 获取 UTF-16 映射表和行边界
+    let scan = scan_source(&source);
+    convert_highlights(scan.byte_to_utf16_map.as_deref(), &mut highlights);
+    convert_outline(scan.byte_to_utf16_map.as_deref(), &mut result.outline);
 
-    result.highlights_by_line = split_highlights_by_line(&source, &highlights);
+    result.highlights_by_line = split_highlights_by_line(&scan.line_boundaries, &highlights);
 
     debug_log!(
         "[RUST] returning result with {} lines of highlights",

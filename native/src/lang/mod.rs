@@ -21,12 +21,18 @@ macro_rules! grammar {
     };
 }
 
+mod c;
+mod cpp;
 mod go;
 mod python;
 mod javascript;
 mod typescript;
 mod bash;
 mod csharp;
+mod java;
+mod json;
+mod css;
+mod rust;
 
 pub struct GrammarDef {
     pub language: tree_sitter::Language,
@@ -37,6 +43,10 @@ pub struct GrammarDef {
 // 按文件扩展名查找对应的 grammar 定义
 pub fn get_grammar(ext: &str) -> Option<&'static LazyLock<GrammarDef>> {
     match ext {
+        ".c" => Some(&c::GRAMMAR),
+        ".h" => Some(&c::GRAMMAR),
+        ".cpp" | ".cc" | ".cxx" => Some(&cpp::GRAMMAR),
+        ".hpp" => Some(&cpp::GRAMMAR),
         ".go" => Some(&go::GRAMMAR),
         ".py" => Some(&python::GRAMMAR),
         ".js" | ".mjs" | ".cjs" => Some(&javascript::GRAMMAR),
@@ -44,6 +54,10 @@ pub fn get_grammar(ext: &str) -> Option<&'static LazyLock<GrammarDef>> {
         ".tsx" => Some(&typescript::GRAMMAR_TSX),
         ".sh" | ".bash" | ".zsh" => Some(&bash::GRAMMAR),
         ".cs" => Some(&csharp::GRAMMAR),
+        ".java" => Some(&java::GRAMMAR),
+        ".json" => Some(&json::GRAMMAR),
+        ".css" => Some(&css::GRAMMAR),
+        ".rs" => Some(&rust::GRAMMAR),
         _ => None,
     }
 }
