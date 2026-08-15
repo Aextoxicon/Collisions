@@ -1,18 +1,7 @@
 use std::sync::LazyLock;
 use crate::lang::GrammarDef;
 
-pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_rust::LANGUAGE.into(), HIGHLIGHT_QUERY, OUTLINE_QUERY);
-
-const OUTLINE_QUERY: &str = r##"
-; Outline queries for Rust
-(function_item name: (identifier) @function)
-(struct_item name: (type_identifier) @type)
-(enum_item name: (type_identifier) @type)
-(trait_item name: (type_identifier) @type)
-(impl_item "impl" @keyword)
-(mod_item name: (identifier) @namespace)
-"##;
-
+pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_rust::LANGUAGE.into(), HIGHLIGHT_QUERY);
 const HIGHLIGHT_QUERY: &str = r##"
 ; COMMENTS
 (line_comment) @comment

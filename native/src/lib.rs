@@ -218,34 +218,106 @@ fn extract_detail(_node: tree_sitter::Node, _source: &[u8]) -> String {
     String::new()
 }
 
-fn build_outline(node: tree_sitter::Node, source: &[u8]) -> OutlineNode {
-    let kind = node.kind().to_string();
-    let name = extract_name(node, source);
-    let detail = extract_detail(node, source);
-    let start_byte = node.start_byte() as u64;
-    let end_byte = node.end_byte() as u64;
+// 只有这些节点类型会生成 OutlineNode
+const OUTLINE_STRUCTURAL_KINDS: &[&str] = &[
 
-    let mut children = Vec::new();
+    "function_definition",
+    "function_declaration",
+    "function_item",
+    "method_definition",
+    "method_declaration",
+    "generator_function_declaration",
+
+    "class_definition",
+    "class_declaration",
+    "class_specifier",
+    "struct_declaration",
+    "struct_specifier",
+    "struct_item",
+    "interface_declaration",
+    "type_alias_declaration",
+    "type_item",
+    "record_declaration",
+    "enum_declaration",
+    "enum_specifier",
+    "enum_item",
+    "trait_item",
+    "impl_item",
+    "annotation_type_declaration",
+
+    "namespace_definition",
+    "namespace_declaration",
+    "mod_item",
+
+    "static_item",
+    "const_item",
+    "type_declaration",
+    "package_clause",
+];
+
+/// 最大 outline 嵌套深度
+const MAX_OUTLINE_DEPTH: usize = 16;
+/// 最大 outline 节点总数（超出直接截断）
+const MAX_OUTLINE_NODES: usize = 1000;
+
+fn is_structural_kind(kind: &str) -> bool {
+    OUTLINE_STRUCTURAL_KINDS.contains(&kind)
+}
+
+/// 结构性节点：创建 OutlineNode 并递归收集子节点
+/// 非结构性节点：不创建节点，但继续深入子节点
+fn collect_outline(
+    node: tree_sitter::Node,
+    source: &[u8],
+    depth: usize,
+    counter: &mut usize,
+    out: &mut Vec<OutlineNode>,
+) {
+    if depth > MAX_OUTLINE_DEPTH || *counter >= MAX_OUTLINE_NODES {
+        return;
+    }
+
+    if is_structural_kind(node.kind()) {
+        if *counter >= MAX_OUTLINE_NODES {
+            return;
+        }
+        *counter += 1;
+
+        let mut children = Vec::new();
+        collect_outline_children(node, source, depth + 1, counter, &mut children);
+
+        out.push(OutlineNode {
+            kind: node.kind().to_string(),
+            name: extract_name(node, source),
+            detail: extract_detail(node, source),
+            start_byte: node.start_byte() as u64,
+            end_byte: node.end_byte() as u64,
+            children,
+        });
+    } else {
+        // 非结构性节点上浮
+        collect_outline_children(node, source, depth, counter, out);
+    }
+}
+
+fn collect_outline_children(
+    node: tree_sitter::Node,
+    source: &[u8],
+    depth: usize,
+    counter: &mut usize,
+    out: &mut Vec<OutlineNode>,
+) {
     let mut cursor = node.walk();
     if cursor.goto_first_child() {
         loop {
             let child = cursor.node();
-            if child.is_named() && child.child_count() > 0 {
-                children.push(build_outline(child, source));
+            if child.is_named() {
+                collect_outline(child, source, depth, counter, out);
             }
             if !cursor.goto_next_sibling() {
                 break;
             }
         }
-    }
-
-    OutlineNode {
-        kind,
-        name,
-        detail,
-        start_byte,
-        end_byte,
-        children,
     }
 }
 
@@ -308,19 +380,14 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     let outline = {
         let root = tree.root_node();
         let mut top = Vec::new();
-        let mut cursor = root.walk();
-        if cursor.goto_first_child() {
-            loop {
-                let node = cursor.node();
-                if node.is_named() && node.child_count() > 0 {
-                    top.push(build_outline(node, source_bytes));
-                }
-                if !cursor.goto_next_sibling() {
-                    break;
-                }
-            }
-        }
-        debug_log!("[RUST] outline count: {}", top.len());
+        let mut counter = 0usize;
+        collect_outline_children(root, source_bytes, 0, &mut counter, &mut top);
+        debug_log!(
+            "[RUST] outline count: {} (max depth: {}, max nodes: {})",
+            top.len(),
+            MAX_OUTLINE_DEPTH,
+            MAX_OUTLINE_NODES
+        );
         top
     };
 
@@ -424,6 +491,15 @@ namespace HelloWorld
                 eprintln!("    [{:?}] offset {}-{}", h.kind, h.start_byte, h.end_byte);
             }
         }
+        eprintln!("=== CSHARP OUTLINE ===");
+        fn print_outline(nodes: &[OutlineNode], depth: usize) {
+            let indent = "  ".repeat(depth);
+            for node in nodes {
+                eprintln!("{}{} name={:?} bytes {}-{} children={}", indent, node.kind, node.name, node.start_byte, node.end_byte, node.children.len());
+                print_outline(&node.children, depth + 1);
+            }
+        }
+        print_outline(&result.outline, 0);
         assert!(!result.highlights_by_line.is_empty(), "expected some highlights");
         // 至少应该有 keyword (using, namespace, class, static, void, string), type, function 等
         let total_tokens: usize = result.highlights_by_line.iter().map(|t| t.len()).sum();

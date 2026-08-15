@@ -1,16 +1,7 @@
 use std::sync::LazyLock;
 use crate::lang::GrammarDef;
 
-pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_java::LANGUAGE.into(), HIGHLIGHT_QUERY, OUTLINE_QUERY);
-
-const OUTLINE_QUERY: &str = r##"
-; Java outlines
-(class_declaration name: (identifier) @type)
-(interface_declaration name: (identifier) @type)
-(enum_declaration name: (identifier) @type)
-(annotation_type_declaration name: (identifier) @type)
-(method_declaration name: (identifier) @function)
-"##;
+pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_java::LANGUAGE.into(), HIGHLIGHT_QUERY);
 
 const HIGHLIGHT_QUERY: &str = r##"
 ; COMMENTS

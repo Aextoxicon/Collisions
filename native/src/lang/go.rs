@@ -1,15 +1,11 @@
 use std::sync::LazyLock;
 use crate::lang::GrammarDef;
 
-pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_go::LANGUAGE.into(), HIGHLIGHT_QUERY, OUTLINE_QUERY);
+pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_go::LANGUAGE.into(), HIGHLIGHT_QUERY);
 
-const OUTLINE_QUERY: &str = "";
-
-// 完整 Go 语法高亮查询（基于 tree-sitter-go v0.25.0 官方 highlights.scm 并适配本地 capture names）
-//
 // 高亮优先级规则：
-//   1. 更具体的 capture 写在前面，匹配优先级更高
-//   2. (identifier) 作为兜底，放在最后
+// 更具体的 capture 写在前面，匹配优先级更高
+// (identifier) 作为兜底，放在最后
 const HIGHLIGHT_QUERY: &str = r##"
 ;COMMENTS
 

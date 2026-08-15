@@ -1,17 +1,7 @@
 use std::sync::LazyLock;
 use crate::lang::GrammarDef;
 
-pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_cpp::LANGUAGE.into(), HIGHLIGHT_QUERY, OUTLINE_QUERY);
-
-const OUTLINE_QUERY: &str = r##"
-; C++ outlines
-(function_definition
-  declarator: (function_declarator
-    declarator: (identifier) @function))
-(struct_specifier name: (type_identifier) @type)
-(class_specifier name: (type_identifier) @type)
-(enum_specifier name: (type_identifier) @type)
-"##;
+pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_cpp::LANGUAGE.into(), HIGHLIGHT_QUERY);
 
 const HIGHLIGHT_QUERY: &str = r##"
 ; COMMENTS

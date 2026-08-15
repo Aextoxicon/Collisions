@@ -1,22 +1,13 @@
 use std::sync::LazyLock;
 
-// 宏：消除每个语言文件中的模板代码（LazyLock + GrammarDef 构造）
+// 消除每个语言文件中的模板代码（LazyLock + GrammarDef 构造）
 // 用法：
 //   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY)
-//   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY, OUTLINE_QUERY)
 macro_rules! grammar {
     ($lang:expr, $highlight:ident) => {
         ::std::sync::LazyLock::new(|| $crate::lang::GrammarDef {
             language: $lang,
             highlight_query: $highlight,
-            outline_query: "",
-        })
-    };
-    ($lang:expr, $highlight:ident, $outline:ident) => {
-        ::std::sync::LazyLock::new(|| $crate::lang::GrammarDef {
-            language: $lang,
-            highlight_query: $highlight,
-            outline_query: $outline,
         })
     };
 }
@@ -37,7 +28,6 @@ mod rust;
 pub struct GrammarDef {
     pub language: tree_sitter::Language,
     pub highlight_query: &'static str,
-    pub outline_query: &'static str,
 }
 
 // 按文件扩展名查找对应的 grammar 定义
