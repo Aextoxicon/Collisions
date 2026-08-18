@@ -3,6 +3,9 @@ package com.example.collisions.Processing
 import uniffi.uniffi_code_parser.parseCode as uniffiParseCode
 import uniffi.uniffi_code_parser.CodeParseResult as UniffiCodeParseResult
 
+@Volatile
+private var nativeUnavailable = false
+
 actual fun parseCode(source: String, extension: String): CodeParseResult {
     val language = mapLanguage(extension)
     if (language == "text") {
@@ -12,6 +15,10 @@ actual fun parseCode(source: String, extension: String): CodeParseResult {
         )
     }
     return try {
+        if (nativeUnavailable) {
+            // 直接降级
+            return fallbackResult(language, source)
+        }
         val result: UniffiCodeParseResult = uniffiParseCode(source, extension)
         CodeParseResult.Code(
             language = language,
@@ -27,16 +34,21 @@ actual fun parseCode(source: String, extension: String): CodeParseResult {
             },
             outline = result.outline.map { it.toKt() },
         )
-    } catch (e: UnsatisfiedLinkError) {
-        // 原生库不可用时，返回空解析结果
-        CodeParseResult.Code(
-            language = language,
-            content = source,
-            highlightsByLine = emptyList(),
-            outline = emptyList(),
-        )
+    } catch (t: Throwable) {
+        // 降级，还是降级
+        nativeUnavailable = true
+        println("parseCode native error for $extension: $t")
+        fallbackResult(language, source)
     }
 }
+
+private fun fallbackResult(language: String, source: String): CodeParseResult.Code =
+    CodeParseResult.Code(
+        language = language,
+        content = source,
+        highlightsByLine = emptyList(),
+        outline = emptyList(),
+    )
 
 private fun uniffi.uniffi_code_parser.OutlineNode.toKt(): com.example.collisions.Processing.OutlineNode =
     com.example.collisions.Processing.OutlineNode(

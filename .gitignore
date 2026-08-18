@@ -32,6 +32,7 @@ captures/
 **/build/
 native/target/
 **/target/
+**/androidMain/jniLibs/
 
 xcuserdata/
 *.xcodeproj/*

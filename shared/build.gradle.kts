@@ -16,8 +16,7 @@ val cargoBuildJvm by tasks.registering(Exec::class) {
     outputs.file(jvmNativeLib)
 }
 
-// 复制 JVM 原生库到build输出目录
-val jvmNativeLibOutputDir = layout.buildDirectory.dir("nativeLibs")
+val jvmNativeLibOutputDir = layout.buildDirectory.dir("nativeLibs/jvm")
 val copyJvmNativeLib by tasks.registering(Copy::class) {
     group = "uniffi"
     description = "Copy JVM native library to build output"
@@ -26,22 +25,41 @@ val copyJvmNativeLib by tasks.registering(Copy::class) {
     into(jvmNativeLibOutputDir)
 }
 
+// AGP自动打包进APK
+val androidJniLibsDir = layout.projectDirectory.dir("src/androidMain/jniLibs")
+val cargoBuildAndroid by tasks.registering(Exec::class) {
+    group = "uniffi"
+    description = "Build Rust native library for Android (arm64-v8a, armeabi-v7a, x86_64)"
+    workingDir = nativeProjectDir
+    commandLine(
+        "cargo", "ndk",
+        "-t", "arm64-v8a",
+        "-t", "armeabi-v7a",
+        "-t", "x86_64",
+        "-o", androidJniLibsDir.asFile.absolutePath,
+        "build"
+    )
+    inputs.dir(nativeProjectDir.resolve("src"))
+    inputs.file(nativeProjectDir.resolve("Cargo.toml"))
+    outputs.dir(androidJniLibsDir)
+}
+
+val buildNativeLibs by tasks.registering {
+    group = "uniffi"
+    description = "Build and copy Rust native libraries for all platforms (JVM + Android)"
+    dependsOn(copyJvmNativeLib, cargoBuildAndroid)
+}
+
 // jvm和android共用
 val generateUniffiKotlinBindings by tasks.registering(Exec::class) {
     group = "uniffi"
     description = "Generate Kotlin Multiplatform bindings from Rust library using uniffi-bindgen"
+    dependsOn(cargoBuildJvm)
     workingDir = nativeProjectDir
     val outDir = uniffiKotlinOutDir.get().asFile
     val nativeLibPath = jvmNativeLib.absolutePath
     outputs.dir(outDir)
     doFirst {
-        // cargo构建仅在构建时触发
-        if (!File(nativeLibPath).exists()) {
-            throw GradleException(
-                "Rust native library not found: $nativeLibPath\n" +
-                    "Please run './gradlew build' first to build the Rust library."
-            )
-        }
         outDir.mkdirs()
     }
     commandLine(
@@ -144,3 +162,11 @@ tasks.named("assemble") {
     dependsOn(copyJvmNativeLib)
 }
 
+// 必须等待cargo ndk产物就绪
+tasks.matching { it.name.contains("JniLibFolders") }.configureEach {
+    dependsOn(cargoBuildAndroid)
+}
+
+tasks.named("build") {
+    dependsOn(buildNativeLibs)
+}

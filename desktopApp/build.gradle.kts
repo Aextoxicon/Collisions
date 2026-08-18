@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
 }
 
-val nativeLibDir = rootProject.file("native/target/debug").absolutePath
+val nativeLibDir = project(":shared").layout.buildDirectory.dir("nativeLibs/jvm").get().asFile.absolutePath
 
 dependencies {
     implementation(project(":shared"))
@@ -30,6 +30,7 @@ compose.desktop {
 }
 
 tasks.withType<JavaExec>().configureEach {
+    dependsOn(":shared:copyJvmNativeLib")
     systemProperty("java.library.path", nativeLibDir)
     environment("DYLD_LIBRARY_PATH", nativeLibDir)
 }
