@@ -173,30 +173,45 @@ fn split_highlights_by_line(
     let mut result: Vec<Vec<HighlightToken>> = (0..line_count).map(|_| Vec::new()).collect();
     let line_starts: Vec<u64> = line_boundaries.iter().map(|(s, _)| *s).collect();
     for h in highlights {
-        let line_idx = match line_starts.binary_search(&h.start_byte) {
+        let start_line = match line_starts.binary_search(&h.start_byte) {
             Ok(idx) => idx,
             Err(idx) => {
-
                 if idx == 0 {
                     continue; // 在文件开头之前，不应发生
                 }
                 idx - 1
             }
         };
-        let (line_start, line_end) = line_boundaries[line_idx];
-        // 是否真的与该行重叠
-        if h.start_byte < line_end && h.end_byte > line_start {
-            let line_len = line_end.saturating_sub(line_start);
-            result[line_idx].push(HighlightToken {
-                start_byte: h.start_byte.saturating_sub(line_start).min(line_len),
-                end_byte: h.end_byte.saturating_sub(line_start).min(line_len),
-                kind: h.kind.clone(),
-            });
+        let end_line = match line_starts.binary_search(&h.end_byte) {
+            Ok(idx) => {
+                if idx == 0 {
+                    continue;
+                }
+                idx - 1
+            }
+            Err(idx) => {
+                if idx == 0 {
+                    continue;
+                }
+                idx - 1
+            }
+        };
+        for line_idx in start_line..=end_line.min(line_count - 1) {
+            let (line_start, line_end) = line_boundaries[line_idx];
+            let overlap_start = h.start_byte.max(line_start);
+            let overlap_end = h.end_byte.min(line_end);
+            if overlap_start < overlap_end {
+                let line_len = line_end.saturating_sub(line_start);
+                result[line_idx].push(HighlightToken {
+                    start_byte: overlap_start.saturating_sub(line_start).min(line_len),
+                    end_byte: overlap_end.saturating_sub(line_start).min(line_len),
+                    kind: h.kind.clone(),
+                });
+            }
         }
     }
-    // 排序过滤
+    // 排序
     for tokens in &mut result {
-        tokens.retain(|t| t.end_byte > 0);
         tokens.sort_by_key(|t| t.start_byte);
     }
 
