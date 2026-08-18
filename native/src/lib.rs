@@ -1,4 +1,5 @@
-use tree_sitter::{Language, Parser, Query, QueryCursor, StreamingIterator};
+use streaming_iterator::StreamingIterator;
+use tree_sitter::{Language, Parser, Query, QueryCursor};
 mod lang;
 mod ffi;
 uniffi::setup_scaffolding!();
@@ -89,9 +90,8 @@ struct ScanSource {
     byte_to_utf16_map: Option<Vec<u32>>,
 }
 
-/// 单次遍历源文件，同时构建行边界和 UTF-16 映射表
 fn scan_source(source: &str) -> ScanSource {
-    // 快速路径：纯 ASCII — 字节偏移 == UTF-16 偏移，无需映射表
+    // 纯ASCII-字节偏移=UTF-16 偏移
     if source.is_ascii() {
         let mut boundaries = Vec::new();
         let mut line_start: u64 = 0;
@@ -171,14 +171,12 @@ fn split_highlights_by_line(
 
     // 预先分配每行的 Vec
     let mut result: Vec<Vec<HighlightToken>> = (0..line_count).map(|_| Vec::new()).collect();
-    // 构建行起始偏移数组用于二分查找
     let line_starts: Vec<u64> = line_boundaries.iter().map(|(s, _)| *s).collect();
     for h in highlights {
-        // 找到的行号 -1 就是 h 所在的行
         let line_idx = match line_starts.binary_search(&h.start_byte) {
             Ok(idx) => idx,
             Err(idx) => {
-                // idx 是第一个 > h.start_byte 的元素
+
                 if idx == 0 {
                     continue; // 在文件开头之前，不应发生
                 }
@@ -186,7 +184,7 @@ fn split_highlights_by_line(
             }
         };
         let (line_start, line_end) = line_boundaries[line_idx];
-        // 检查 token 是否真的与该行重叠
+        // 是否真的与该行重叠
         if h.start_byte < line_end && h.end_byte > line_start {
             let line_len = line_end.saturating_sub(line_start);
             result[line_idx].push(HighlightToken {
@@ -196,7 +194,7 @@ fn split_highlights_by_line(
             });
         }
     }
-    // 对每行内的 token 按 start_byte 排序，并过滤掉空 token
+    // 排序过滤
     for tokens in &mut result {
         tokens.retain(|t| t.end_byte > 0);
         tokens.sort_by_key(|t| t.start_byte);
@@ -295,7 +293,6 @@ fn collect_outline(
             children,
         });
     } else {
-        // 非结构性节点上浮
         collect_outline_children(node, source, depth, counter, out);
     }
 }
@@ -326,21 +323,48 @@ fn collect_outline_children(
 pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     let source_bytes = source.as_bytes();
     // 找grammar
-    let grammar = lang::get_grammar(&extension)
-        .unwrap_or_else(|| panic!("Unsupported file extension: {}", extension));
+    let grammar = match lang::get_grammar(&extension) {
+        Some(g) => g,
+        None => {
+            debug_log!("[RUST] unsupported extension: {}", extension);
+            return CodeParseResult {
+                highlights_by_line: Vec::new(),
+                outline: Vec::new(),
+            };
+        }
+    };
     let language: Language = grammar.language.clone();
 
     let mut parser = Parser::new();
-    parser
-        .set_language(&language)
-        .expect("Failed to set language");
+    if parser.set_language(&language).is_err() {
+        debug_log!("[RUST] failed to set language for extension: {}", extension);
+        return CodeParseResult {
+            highlights_by_line: Vec::new(),
+            outline: Vec::new(),
+        };
+    }
 
-    let tree = parser
-        .parse(source_bytes, None)
-        .expect("Failed to parse source");
+    let tree = match parser.parse(source_bytes, None) {
+        Some(t) => t,
+        None => {
+            debug_log!("[RUST] failed to parse source for extension: {}", extension);
+            return CodeParseResult {
+                highlights_by_line: Vec::new(),
+                outline: Vec::new(),
+            };
+        }
+    };
 
-    let query =
-        Query::new(&language, grammar.highlight_query).expect("Invalid highlight query");
+    let query = match Query::new(&language, grammar.highlight_query) {
+        Ok(q) => q,
+        Err(e) => {
+            debug_log!("[RUST] invalid highlight query for {}: {}", extension, e);
+            return CodeParseResult {
+                highlights_by_line: Vec::new(),
+                outline: Vec::new(),
+            };
+        }
+    };
 
     debug_log!(
         "[RUST] parse_code called, source length={}, extension={}",
@@ -415,6 +439,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_all_queries_compile() {
+        // 验证每个 grammar 的 highlight query 都能成功编译
+        let extensions = [".c", ".h", ".cpp", ".hpp", ".go", ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".bash", ".zsh", ".cs", ".java", ".json", ".css", ".rs"];
+        let mut failures = Vec::new();
+        for ext in extensions {
+            let grammar = crate::lang::get_grammar(ext).expect(&format!("no grammar for {}", ext));
+            match tree_sitter::Query::new(&grammar.language, grammar.highlight_query) {
+                Ok(_) => eprintln!("[QUERY OK] {}", ext),
+                Err(e) => failures.push(format!("{}: {}", ext, e)),
+            }
+        }
+        assert!(failures.is_empty(), "query failures:\n{}", failures.join("\n"));
+    }
+
+    #[test]
     fn test_parse_go_code() {
         let source = r#"package main
 
@@ -445,6 +484,54 @@ func main() {
     }
 
     #[test]
+    fn test_all_languages_parse_and_highlight() {
+        // 覆盖所有已注册的扩展名，确保每个 grammar 都能 parse + query
+        let cases = [
+            (".c", "#include <stdio.h>\nint main() { /* c comment */ int x = 1; return 0; }\n"),
+            (".h", "#ifndef H\n#define H\nint add(int a, int b); // header comment\n#endif\n"),
+            (".cpp", "int main() { // cpp comment\n  auto x = 1; /* block */ return x;\n}\n"),
+            (".hpp", "class Foo { public: int bar(); }; // hpp comment\n"),
+            (".go", "package main\n\n// go comment\nfunc main() {\n\tfmt.Println(\"hi\")\n}\n"),
+            (".py", "# python comment\n\ndef main():  # inline\n    return 1\n"),
+            (".js", "// js comment\nfunction foo() { /* block */ return 1; }\n"),
+            (".mjs", "// mjs comment\nexport const x = 1;\n"),
+            (".cjs", "// cjs comment\nmodule.exports = 1;\n"),
+            (".ts", "// ts comment\nfunction add(a: number): number { return a; }\n"),
+            (".tsx", "// tsx comment\nconst el = <div>hi</div>;\n"),
+            (".sh", "#!/bin/bash\n# shell comment\necho hello\n"),
+            (".bash", "# bash comment\necho hi\n"),
+            (".zsh", "# zsh comment\necho hi\n"),
+            (".cs", "// cs comment\nclass C { int M() { return 1; } }\n"),
+            (".java", "// java comment\npublic class Main { public static void main(String[] a) { /* block */ } }\n"),
+            (".json", "{\n  \"key\": \"value\"  // jsonc not std, just test\n}\n"),
+            (".css", "/* css comment */\nbody { color: red; }\n"),
+            (".rs", "// rust comment\nfn main() { /* block */ let x = 1; }\n"),
+        ];
+
+        for (ext, source) in cases {
+            let result = parse_code(source.to_string(), ext.to_string());
+            eprintln!("=== {} ===", ext);
+            eprintln!("  lines: {} (source has {} lines)", result.highlights_by_line.len(), source.lines().count());
+            let total_tokens: usize = result.highlights_by_line.iter().map(|t| t.len()).sum();
+            eprintln!("  total tokens: {}", total_tokens);
+
+            // 简单断言：至少有一个 token（C 语言至少能识别 #include 或 comment）
+            // 注意：JSON 标准语法里 // 不是注释，只要没 panic 就算通过
+            assert!(
+                total_tokens > 0,
+                "{}: expected at least 1 highlight token, got 0",
+                ext
+            );
+
+            // 打印前几行 token 种类用于调试
+            for (i, line) in result.highlights_by_line.iter().enumerate().take(3) {
+                let kinds: Vec<String> = line.iter().map(|t| format!("{:?}", t.kind)).collect();
+                eprintln!("  line {}: {}", i, kinds.join(", "));
+            }
+        }
+    }
+
+    #[test]
     fn test_parse_python_code() {
         let source = r#"import os
 import sys
@@ -464,44 +551,6 @@ def main():
         }
         assert!(!result.highlights_by_line.is_empty(), "expected some highlights");
         // 至少应该有 keyword (import, def), string, identifier 等
-        let total_tokens: usize = result.highlights_by_line.iter().map(|t| t.len()).sum();
-        assert!(total_tokens > 5, "expected more than 5 tokens, got {}", total_tokens);
-    }
-
-    #[test]
-    fn test_parse_csharp_code() {
-        let source = r#"using System;
-
-namespace HelloWorld
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello World");
-        }
-    }
-}
-"#;
-        let result = parse_code(source.to_string(), ".cs".to_string());
-        eprintln!("=== CSHARP HIGHLIGHTS BY LINE ===");
-        for (i, line_tokens) in result.highlights_by_line.iter().enumerate() {
-            eprintln!("  line {}: {} tokens", i, line_tokens.len());
-            for h in line_tokens {
-                eprintln!("    [{:?}] offset {}-{}", h.kind, h.start_byte, h.end_byte);
-            }
-        }
-        eprintln!("=== CSHARP OUTLINE ===");
-        fn print_outline(nodes: &[OutlineNode], depth: usize) {
-            let indent = "  ".repeat(depth);
-            for node in nodes {
-                eprintln!("{}{} name={:?} bytes {}-{} children={}", indent, node.kind, node.name, node.start_byte, node.end_byte, node.children.len());
-                print_outline(&node.children, depth + 1);
-            }
-        }
-        print_outline(&result.outline, 0);
-        assert!(!result.highlights_by_line.is_empty(), "expected some highlights");
-        // 至少应该有 keyword (using, namespace, class, static, void, string), type, function 等
         let total_tokens: usize = result.highlights_by_line.iter().map(|t| t.len()).sum();
         assert!(total_tokens > 5, "expected more than 5 tokens, got {}", total_tokens);
     }

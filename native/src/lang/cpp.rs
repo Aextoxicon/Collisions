@@ -18,11 +18,10 @@ const HIGHLIGHT_QUERY: &str = r##"
 ; BOOLEANS
 (true) @constant.builtin
 (false) @constant.builtin
-(nullptr) @constant.builtin
+(null "nullptr" @constant.builtin)
 
 ; KEYWORDS
 [
-  "auto"
   "break"
   "case"
   "catch"
@@ -37,7 +36,6 @@ const HIGHLIGHT_QUERY: &str = r##"
   "else"
   "enum"
   "explicit"
-  "export"
   "extern"
   "for"
   "friend"
@@ -55,39 +53,21 @@ const HIGHLIGHT_QUERY: &str = r##"
   "public"
   "register"
   "return"
-  "signed"
   "sizeof"
   "static"
   "static_assert"
   "struct"
   "switch"
   "template"
-  "this"
   "throw"
   "try"
   "typedef"
-  "typeid"
   "typename"
   "union"
-  "unsigned"
   "using"
   "virtual"
-  "void"
   "volatile"
   "while"
-  "int"
-  "long"
-  "short"
-  "char"
-  "float"
-  "double"
-  "bool"
-  "wchar_t"
-  "nullptr"
-  "const_cast"
-  "dynamic_cast"
-  "reinterpret_cast"
-  "static_cast"
   "#include"
   "#define"
   "#ifdef"
@@ -96,13 +76,14 @@ const HIGHLIGHT_QUERY: &str = r##"
   "#if"
   "#else"
   "#elif"
-  "#pragma"
-  "#error"
-  "#undef"
-  "#line"
 ] @keyword
 
-; PREPROCESSOR
+; PRIMITIVE TYPES
+(primitive_type) @type
+(sized_type_specifier) @type
+
+; PREPROCESSOR (包括 #pragma/#error/#undef 等)
+(preproc_directive) @keyword
 (preproc_include) @keyword
 (preproc_def) @keyword
 
@@ -124,9 +105,7 @@ const HIGHLIGHT_QUERY: &str = r##"
 (type_identifier) @type
 
 ; TEMPLATE
-(template_argument
-  (type_identifier) @type)
-(template_parameter
+(template_instantiation
   (type_identifier) @type)
 
 ; FIELD ACCESS
@@ -135,10 +114,7 @@ const HIGHLIGHT_QUERY: &str = r##"
 
 ; NAMESPACE
 (namespace_definition
-  name: (identifier) @namespace)
-(namespace_definition
-  name: (qualified_identifier
-    (identifier) @namespace))
+  name: (namespace_identifier) @namespace)
 
 ; ENUM CONSTANTS
 (enumerator

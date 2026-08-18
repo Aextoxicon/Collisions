@@ -54,3 +54,16 @@ native/       Rust 底层库（tree-sitter 解析等），通过 UniFFI 暴露
 ```
 
 Rust 库构建后，UniFFI 会生成 JNA 绑定到 `shared/build/generated/uniffi/kotlin/`，由 `jvmMain` 和 `androidMain` 共用。
+
+note
+```
+Kotlin UI->parseCode(source, ext) [expect/actual]
+  CodeParser.android.kt / .jvm.kt / .ios.kt [platform actual]
+    UniFFI 桥接 (uniffi.uniffi_code_parser.parseCode)
+      Rust lib.rs: parse_code()
+        lang::get_grammar(ext) → GrammarDef { language, highlight_query }
+          Parser::set_language(&language)  <-ABI 版本检查在此
+            Parser::parse(source_bytes)
+              Query::new() + QueryCursor::matches()
+                返回 CodeParseResult
+```

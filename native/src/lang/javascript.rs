@@ -43,6 +43,9 @@ const HIGHLIGHT_QUERY: &str = r##"
   (undefined)
 ] @constant.builtin
 
+(this) @variable.builtin
+(super) @variable.builtin
+
 ;KEYWORDS
 
 [
@@ -76,10 +79,8 @@ const HIGHLIGHT_QUERY: &str = r##"
   "return"
   "set"
   "static"
-  "super"
   "switch"
   "target"
-  "this"
   "throw"
   "try"
   "typeof"
@@ -132,7 +133,6 @@ const HIGHLIGHT_QUERY: &str = r##"
   ">>>"
   ">>>="
   "?"
-  "?."
   "??"
   "??="
   "^"
@@ -142,8 +142,6 @@ const HIGHLIGHT_QUERY: &str = r##"
   "||"
   "||="
   "~"
-  "??"
-  "?."
 ] @operator
 
 ;FUNCTION CALLS

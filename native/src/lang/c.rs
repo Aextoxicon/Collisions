@@ -20,7 +20,6 @@ const HIGHLIGHT_QUERY: &str = r##"
 
 ; KEYWORDS
 [
-  "auto"
   "break"
   "case"
   "const"
@@ -35,17 +34,13 @@ const HIGHLIGHT_QUERY: &str = r##"
   "if"
   "inline"
   "register"
-  "restrict"
   "return"
-  "signed"
   "sizeof"
   "static"
   "struct"
   "switch"
   "typedef"
   "union"
-  "unsigned"
-  "void"
   "volatile"
   "while"
   "#include"
@@ -56,19 +51,14 @@ const HIGHLIGHT_QUERY: &str = r##"
   "#if"
   "#else"
   "#elif"
-  "#pragma"
-  "#error"
-  "#undef"
-  "#line"
-  "int"
-  "long"
-  "short"
-  "char"
-  "float"
-  "double"
 ] @keyword
 
-; PREPROCESSOR
+; PRIMITIVE TYPES (int, void, char, etc. are primitive_type nodes, not tokens)
+(primitive_type) @type
+(sized_type_specifier) @type
+
+; PREPROCESSOR (包括 #pragma/#error/#undef 等未单独列出的指令)
+(preproc_directive) @keyword
 (preproc_include) @keyword
 (preproc_def) @keyword
 (preproc_function_def

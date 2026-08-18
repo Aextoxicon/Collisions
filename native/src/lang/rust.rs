@@ -28,7 +28,6 @@ const HIGHLIGHT_QUERY: &str = r##"
   "break"
   "const"
   "continue"
-  "crate"
   "dyn"
   "else"
   "enum"
@@ -44,15 +43,11 @@ const HIGHLIGHT_QUERY: &str = r##"
   "match"
   "mod"
   "move"
-  "mut"
   "pub"
   "ref"
   "return"
-  "self"
-  "Self"
   "static"
   "struct"
-  "super"
   "trait"
   "true"
   "type"
@@ -106,7 +101,6 @@ const HIGHLIGHT_QUERY: &str = r##"
   "|"
   "||"
   "|="
-  "~"
 ] @operator
 
 ; FUNCTION DEFINITIONS
@@ -159,9 +153,10 @@ const HIGHLIGHT_QUERY: &str = r##"
   field: (field_identifier) @property)
 
 ; STRUCT LITERAL FIELD NAMES
-(struct_literal
-  (field_initializer
-    (field_identifier) @property))
+(struct_expression
+  body: (field_initializer_list
+    (field_initializer
+      field: (field_identifier) @property)))
 
 ; ENUM VARIANTS
 (scoped_identifier
@@ -192,14 +187,9 @@ const HIGHLIGHT_QUERY: &str = r##"
 (let_declaration
   pattern: (identifier) @variable)
 
-; MUTABLE VARIABLES
+; MUTABLE KEYWORD
 (let_declaration
-  pattern: (mutable_specifier
-    (identifier) @variable))
-
-; MATCH PATTERNS
-(match_arm
-  pattern: (identifier) @variable)
+  (mutable_specifier) @keyword)
 
 ; FUNCTION PARAMETERS
 (parameters
@@ -208,11 +198,27 @@ const HIGHLIGHT_QUERY: &str = r##"
 
 ; CLOSURE PARAMETERS
 (closure_parameters
-  (closure_parameter
+  (parameter
     pattern: (identifier) @variable))
+
+; SUPER KEYWORD
+(super) @keyword
 
 ; SELF PARAMETER
 (self_parameter) @variable
+
+; SELF KEYWORD IN USE PATHS
+(use_list
+  (self) @keyword)
+
+(scoped_use_list
+  (self) @keyword)
+
+(scoped_identifier
+  (self) @keyword)
+
+; SELF VALUE
+(self) @variable.builtin
 
 ; IDENTIFIER FALLBACK (very last)
 (identifier) @identifier

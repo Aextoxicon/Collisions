@@ -34,10 +34,14 @@ actual fun parseCode(source: String, extension: String): CodeParseResult {
             },
             outline = result.outline.map { it.toKt() },
         )
-    } catch (t: Throwable) {
-        // 降级，还是降级
+    } catch (e: UnsatisfiedLinkError) {
+        // .so 未加载，永久降级
         nativeUnavailable = true
-        println("parseCode native error for $extension: $t")
+        println("parseCode native unavailable: $e")
+        fallbackResult(language, source)
+    } catch (e: Exception) {
+        // 解析异常不永久降级
+        println("parseCode native error for $extension: $e")
         fallbackResult(language, source)
     }
 }

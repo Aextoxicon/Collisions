@@ -6,26 +6,18 @@ pub static GRAMMAR: LazyLock<GrammarDef> = grammar!(tree_sitter_css::LANGUAGE.in
 const HIGHLIGHT_QUERY: &str = r##"
 ; CSS highlights
 
-; Selectors
-(selector) @constant
-
 ; Properties
 (property_name) @property
 
 ; Values
-(property_value) @string
+(plain_value) @string
 
 ; Numbers
 (integer_value) @number
 (float_value) @number
 
 ; Keywords
-[
-  "important"
-  "inherit"
-  "initial"
-  "unset"
-] @keyword
+(important) @keyword
 
 ; Colors
 (color_value) @constant.builtin

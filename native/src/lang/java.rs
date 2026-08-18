@@ -11,11 +11,14 @@ const HIGHLIGHT_QUERY: &str = r##"
 ; STRINGS
 (string_literal) @string
 (escape_sequence) @escape
-(char_literal) @string
+(character_literal) @string
 
 ; NUMBERS
-(integer_literal) @number
-(floating_point_literal) @number
+(hex_integer_literal) @number
+(decimal_integer_literal) @number
+(octal_integer_literal) @number
+(decimal_floating_point_literal) @number
+(hex_floating_point_literal) @number
 
 ; BOOLEANS
 (true) @constant.builtin
@@ -53,16 +56,12 @@ const HIGHLIGHT_QUERY: &str = r##"
   "return"
   "static"
   "strictfp"
-  "super"
   "switch"
   "synchronized"
-  "this"
   "throw"
   "throws"
   "transient"
   "try"
-  "var"
-  "void"
   "volatile"
   "while"
   "module"
@@ -82,16 +81,11 @@ const HIGHLIGHT_QUERY: &str = r##"
 ] @keyword
 
 ; PRIMITIVE TYPES
-[
-  "boolean"
-  "byte"
-  "char"
-  "double"
-  "float"
-  "int"
-  "long"
-  "short"
-] @type.builtin
+(boolean_type) @type.builtin
+(integral_type) @type.builtin
+(floating_point_type) @type.builtin
+
+(void_type) @keyword
 
 ; ANNOTATIONS
 (annotation
@@ -132,7 +126,8 @@ const HIGHLIGHT_QUERY: &str = r##"
 
 ; CONSTANTS
 (constant_declaration
-  name: (identifier) @constant)
+  declarator: (variable_declarator
+    name: (identifier) @constant))
 
 ; PARAMETERS
 (formal_parameter

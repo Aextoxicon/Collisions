@@ -62,6 +62,164 @@ class CodeParserJvmTest {
     }
 
     @Test
+    fun `parse Go code returns highlights`() {
+        val source = """
+            package main
+
+            import "fmt"
+
+            func main() {
+                fmt.Println("hello world")
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".go")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for Go")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for Go")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `parse JavaScript code returns highlights`() {
+        val source = """
+            function greet(name) {
+                const x = 42;
+                return `Hello, ${'$'}name`;
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".js")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for JavaScript")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for JavaScript")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `parse Rust code returns highlights`() {
+        val source = """
+            fn main() {
+                let x = 42;
+                println!("hello world");
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".rs")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for Rust")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for Rust")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `parse C code returns highlights`() {
+        val source = """
+            #include <stdio.h>
+
+            int main() {
+                printf("hello world");
+                return 0;
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".c")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for C")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for C")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `parse Java code returns highlights`() {
+        val source = """
+            class Hello {
+                public static void main(String[] args) {
+                    System.out.println("hello");
+                }
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".java")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for Java")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for Java")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `parse TypeScript code returns highlights`() {
+        val source = """
+            function greet(name: string): void {
+                const x: number = 42;
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".ts")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.isNotEmpty(), "Expected highlights for TypeScript")
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(kinds.isNotEmpty(), "Expected kinds for TypeScript")
+            assertFalse(kinds.any { it.contains("_") && it == it.uppercase() }, "Found unmapped kinds: $kinds")
+        }
+    }
+
+    @Test
+    fun `unsupported extension returns empty highlights`() {
+        val source = "some kotlin code"
+        val result = parseCode(source, ".kt")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.all { it.isEmpty() }, "Expected empty highlights for unsupported language")
+        }
+    }
+
+    @Test
+    fun `parse C code with line and block comments returns Comment tokens`() {
+        val source = """
+            int main() {
+                // line comment
+                /* block comment */
+                return 0;
+            }
+        """.trimIndent()
+
+        val result = parseCode(source, ".c")
+
+        assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
+        if (result is CodeParseResult.Code) {
+            val kinds = result.highlightsByLine.flatten().map { it.kind }.toSet()
+            assertTrue(
+                "comment" in kinds,
+                "Expected comment tokens for // and /* */, got kinds: $kinds"
+            )
+        }
+    }
+
+    @Test
     fun `kind mapping works correctly`() {
         assertEquals("keyword", HighlightToken.mapKind("KEYWORD"))
         assertEquals("string", HighlightToken.mapKind("STRING_LITERAL"))
