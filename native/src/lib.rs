@@ -1,7 +1,6 @@
 use streaming_iterator::StreamingIterator;
 use tree_sitter::{Language, Parser, Query, QueryCursor};
 mod lang;
-mod ffi;
 uniffi::setup_scaffolding!();
 
 // 调试日志宏
@@ -13,7 +12,7 @@ macro_rules! debug_log {
 }
 
 //UniFFI types
-#[derive(uniffi::Enum, Debug, Clone, serde::Serialize)]
+#[derive(uniffi::Enum, Debug, Clone)]
 pub enum HighlightTokenKind {
     Keyword,
     StringLiteral,
@@ -60,14 +59,14 @@ impl HighlightTokenKind {
     }
 }
 
-#[derive(uniffi::Record, serde::Serialize)]
+#[derive(uniffi::Record)]
 pub struct HighlightToken {
     pub start_byte: u64,
     pub end_byte: u64,
     pub kind: HighlightTokenKind,
 }
 
-#[derive(uniffi::Record, serde::Serialize)]
+#[derive(uniffi::Record)]
 pub struct OutlineNode {
     pub kind: String,
     pub name: String,
@@ -77,7 +76,7 @@ pub struct OutlineNode {
     pub children: Vec<OutlineNode>,
 }
 
-#[derive(uniffi::Record, serde::Serialize)]
+#[derive(uniffi::Record)]
 pub struct CodeParseResult {
     // 按需返回每行的高亮 token
     pub highlights_by_line: Vec<Vec<HighlightToken>>,
@@ -182,19 +181,14 @@ fn split_highlights_by_line(
                 idx - 1
             }
         };
-        let end_line = match line_starts.binary_search(&h.end_byte) {
-            Ok(idx) => {
-                if idx == 0 {
-                    continue;
-                }
-                idx - 1
+        let end_line = {
+            let idx = match line_starts.binary_search(&h.end_byte) {
+                Ok(idx) | Err(idx) => idx,
+            };
+            if idx == 0 {
+                continue;
             }
-            Err(idx) => {
-                if idx == 0 {
-                    continue;
-                }
-                idx - 1
-            }
+            idx - 1
         };
         for line_idx in start_line..=end_line.min(line_count - 1) {
             let (line_start, line_end) = line_boundaries[line_idx];
@@ -225,10 +219,6 @@ fn extract_name(node: tree_sitter::Node, source: &[u8]) -> String {
     } else {
         String::new()
     }
-}
-
-fn extract_detail(_node: tree_sitter::Node, _source: &[u8]) -> String {
-    String::new()
 }
 
 // 只有这些节点类型会生成 OutlineNode
@@ -302,7 +292,7 @@ fn collect_outline(
         out.push(OutlineNode {
             kind: node.kind().to_string(),
             name: extract_name(node, source),
-            detail: extract_detail(node, source),
+            detail: String::new(),
             start_byte: node.start_byte() as u64,
             end_byte: node.end_byte() as u64,
             children,
