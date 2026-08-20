@@ -4,13 +4,7 @@ import uniffi.uniffi_code_parser.parseCode as uniffiParseCode
 import uniffi.uniffi_code_parser.CodeParseResult as UniffiCodeParseResult
 
 actual fun parseCode(source: String, extension: String): CodeParseResult {
-    val language = mapLanguage(extension)
-    if (language == "text") {
-        return CodeParseResult.PlainText(
-            language = language,
-            content = source,
-        )
-    }
+    val language = extension.trimStart('.')
     val result: UniffiCodeParseResult = uniffiParseCode(source, extension)
     return CodeParseResult.Code(
         language = language,
@@ -37,27 +31,3 @@ private fun uniffi.uniffi_code_parser.OutlineNode.toKt(): com.example.collisions
         endByte = endByte.toLong(),
         children = children.map { it.toKt() },
     )
-
-private fun mapLanguage(extension: String): String = when (extension.lowercase().trimStart('.')) {
-    "kt", "kts" -> "kotlin"
-    "java" -> "java"
-    "swift" -> "swift"
-    "c" -> "c"
-    "cpp", "cc", "cxx" -> "cpp"
-    "h", "hpp" -> "cpp"
-    "rs" -> "rust"
-    "py" -> "python"
-    "js", "jsx" -> "javascript"
-    "ts", "tsx" -> "typescript"
-    "html", "htm" -> "html"
-    "css" -> "css"
-    "json" -> "json"
-    "xml" -> "xml"
-    "yaml", "yml" -> "yaml"
-    "toml" -> "toml"
-    "sh", "bash" -> "bash"
-    "go" -> "go"
-    "md", "markdown" -> "markdown"
-    "txt" -> "text"
-    else -> "text"
-}
