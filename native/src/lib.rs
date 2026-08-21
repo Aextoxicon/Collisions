@@ -281,9 +281,6 @@ fn collect_outline(
     }
 
     if is_structural_kind(node.kind()) {
-        if *counter >= MAX_OUTLINE_NODES {
-            return;
-        }
         *counter += 1;
 
         let mut children = Vec::new();
@@ -389,7 +386,7 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
                 results.push(HighlightToken {
                     start_byte: node.start_byte() as u64,
                     end_byte: node.end_byte() as u64,
-                    kind: HighlightTokenKind::from_str(&kind_str),
+                    kind: HighlightTokenKind::from_str(kind_str),
                 });
             }
         }
@@ -449,7 +446,8 @@ mod tests {
         let extensions = [".c", ".h", ".cpp", ".hpp", ".go", ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".bash", ".zsh", ".cs", ".java", ".json", ".css", ".rs"];
         let mut failures = Vec::new();
         for ext in extensions {
-            let grammar = crate::lang::get_grammar(ext).expect(&format!("no grammar for {}", ext));
+            let grammar =
+                crate::lang::get_grammar(ext).unwrap_or_else(|| panic!("no grammar for {}", ext));
             match tree_sitter::Query::new(&grammar.language, grammar.highlight_query) {
                 Ok(_) => eprintln!("[QUERY OK] {}", ext),
                 Err(e) => failures.push(format!("{}: {}", ext, e)),

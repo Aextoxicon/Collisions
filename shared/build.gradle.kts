@@ -3,7 +3,15 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 val nativeProjectDir = rootProject.file("native")
 val nativeTargetDir = nativeProjectDir.resolve("target")
 val nativeLibName = "uniffi_code_parser"
-val jvmNativeLib = nativeTargetDir.resolve("debug/lib${nativeLibName}.dylib")
+
+// JVM/桌面端按平台区分 native 库文件名（cargo 产物命名规则）
+val hostOs = System.getProperty("os.name").lowercase()
+val jvmNativeLib = when {
+    hostOs.contains("mac") -> nativeTargetDir.resolve("debug/lib${nativeLibName}.dylib")
+    hostOs.contains("win") -> nativeTargetDir.resolve("debug/${nativeLibName}.dll")
+    else -> nativeTargetDir.resolve("debug/lib${nativeLibName}.so")
+}
+
 val uniffiKotlinOutDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
 
 val cargoBuildJvm by tasks.registering(Exec::class) {

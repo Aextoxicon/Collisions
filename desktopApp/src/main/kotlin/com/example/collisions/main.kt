@@ -6,10 +6,12 @@ import androidx.compose.ui.window.application
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.FileDialog
+import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.UIManager
 
 fun main() = application {
+    configureNativeLib()
     Window(
         onCloseRequest = ::exitApplication,
         title = "Collisions",
@@ -22,6 +24,22 @@ fun main() = application {
             },
         )
     }
+}
+
+private fun configureNativeLib() {
+    val resourcesDir = System.getProperty("compose.application.resources.dir") ?: return
+    val osName = System.getProperty("os.name").lowercase()
+    val libName = when {
+        osName.contains("win") -> "uniffi_code_parser.dll"
+        osName.contains("mac") -> "libuniffi_code_parser.dylib"
+        else -> "libuniffi_code_parser.so"
+    }
+    val libFile = File(resourcesDir, libName)
+    if (!libFile.exists()) {
+        println("Warning: native library not found in distribution resources: ${libFile.absolutePath}")
+        return
+    }
+    System.setProperty("uniffi.component.uniffi_code_parser.libraryOverride", libFile.absolutePath)
 }
 
 /** macOS: 使用 AWT FileDialog，调用NSOpenPanel
@@ -39,7 +57,7 @@ private fun pickFolderNative(): String? {
 private fun pickFolderMac(): String? {
     System.setProperty("apple.awt.fileDialogForDirectories", "true")
     val dialog = FileDialog(null as java.awt.Frame?, "选择文件夹", FileDialog.LOAD)
-    dialog.isVisible = true // 阻塞，弹出真正的原生 NSOpenPanel
+    dialog.isVisible = true // 弹NSOpenPanel
     return dialog.directory?.let { dir ->
         dialog.file?.let { "${dir}${it}" } ?: dir
     }

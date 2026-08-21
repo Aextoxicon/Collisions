@@ -27,6 +27,10 @@ Because this damn place probably doesn’t have many people looking, I’ll fill
 ```sh
 # 运行（会自动 cargo build 并生成 uniffi 绑定）
 ./gradlew :desktopApp:run
+# 生成app
+./gradlew :desktopApp:createDistributable
+#生成exe
+./gradlew :desktopApp:packageExe
 ```
 
 ### Android App
@@ -42,15 +46,6 @@ Because this damn place probably doesn’t have many people looking, I’ll fill
 ```sh
 # 运行 shared 模块的 JVM 测试（会加载 Rust 原生库）
 ./gradlew :shared:jvmTest
-```
-
-## 架构 / Architecture
-
-```
-androidApp/   Android 入口（Compose）
-desktopApp/   Desktop 入口（Compose Desktop）
-shared/       共享业务逻辑与 UI（KMP commonMain）
-native/       Rust 底层库（tree-sitter 解析等），通过 UniFFI 暴露
 ```
 
 Rust 库构建后，UniFFI 会生成 JNA 绑定到 `shared/build/generated/uniffi/kotlin/`，由 `jvmMain` 和 `androidMain` 共用。
