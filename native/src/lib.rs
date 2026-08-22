@@ -1,5 +1,5 @@
 use streaming_iterator::StreamingIterator;
-use tree_sitter::{Language, Parser, Query, QueryCursor};
+use tree_sitter::{Language, Parser, QueryCursor};
 mod lang;
 uniffi::setup_scaffolding!();
 
@@ -357,16 +357,7 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
         }
     };
 
-    let query = match Query::new(&language, grammar.highlight_query) {
-        Ok(q) => q,
-        Err(e) => {
-            debug_log!("[RUST] invalid highlight query for {}: {}", extension, e);
-            return CodeParseResult {
-                highlights_by_line: Vec::new(),
-                outline: Vec::new(),
-            };
-        }
-    };
+    let query = &grammar.compiled_query;
 
     debug_log!(
         "[RUST] parse_code called, source length={}, extension={}",
@@ -378,7 +369,7 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     let mut highlights = {
         let mut qc = QueryCursor::new();
         let mut results = Vec::new();
-        let mut matches = qc.matches(&query, tree.root_node(), source.as_bytes());
+        let mut matches = qc.matches(query, tree.root_node(), source.as_bytes());
         while let Some(match_) = matches.next() {
             for capture in match_.captures {
                 let node = capture.node;
@@ -448,9 +439,10 @@ mod tests {
         for ext in extensions {
             let grammar =
                 crate::lang::get_grammar(ext).unwrap_or_else(|| panic!("no grammar for {}", ext));
-            match tree_sitter::Query::new(&grammar.language, grammar.highlight_query) {
-                Ok(_) => eprintln!("[QUERY OK] {}", ext),
-                Err(e) => failures.push(format!("{}: {}", ext, e)),
+            let names = grammar.compiled_query.capture_names();
+            eprintln!("[QUERY OK] {} ({} captures)", ext, names.len());
+            if names.is_empty() {
+                failures.push(format!("{}: no captures", ext));
             }
         }
         assert!(failures.is_empty(), "query failures:\n{}", failures.join("\n"));

@@ -5,9 +5,13 @@ use std::sync::LazyLock;
 //   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY)
 macro_rules! grammar {
     ($lang:expr, $highlight:ident) => {
-        ::std::sync::LazyLock::new(|| $crate::lang::GrammarDef {
-            language: $lang,
-            highlight_query: $highlight,
+        ::std::sync::LazyLock::new(|| {
+            let query = ::tree_sitter::Query::new(&$lang, $highlight)
+                .expect("invalid highlight query");
+            $crate::lang::GrammarDef {
+                language: $lang,
+                compiled_query: query,
+            }
         })
     };
 }
@@ -27,7 +31,8 @@ mod rust;
 
 pub struct GrammarDef {
     pub language: tree_sitter::Language,
-    pub highlight_query: &'static str,
+    /// 预编译的 Query
+    pub compiled_query: tree_sitter::Query,
 }
 
 // 按文件扩展名查找对应的 grammar 定义
