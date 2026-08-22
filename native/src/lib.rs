@@ -54,7 +54,10 @@ impl HighlightTokenKind {
             "punctuation" => HighlightTokenKind::Punctuation,
             "escape" => HighlightTokenKind::Escape,
             "constant.builtin" => HighlightTokenKind::ConstantBuiltin,
-            _ => HighlightTokenKind::Unknown,
+            _ => {
+                debug_log!("[RUST] unknown capture name: '{}'", s);
+                HighlightTokenKind::Unknown
+            }
         }
     }
 }
@@ -182,9 +185,9 @@ fn split_highlights_by_line(
             }
         };
         let end_line = {
-            let idx = match line_starts.binary_search(&h.end_byte) {
-                Ok(idx) | Err(idx) => idx,
-            };
+            let idx = line_starts
+                .binary_search(&h.end_byte)
+                .unwrap_or_else(|insertion_point| insertion_point);
             if idx == 0 {
                 continue;
             }
