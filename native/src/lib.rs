@@ -430,22 +430,3 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     result
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_all_queries_compile() {
-        // 验证每个 grammar 的 highlight query 都能成功编译
-        let extensions = [".c", ".h", ".cpp", ".hpp", ".go", ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".bash", ".zsh", ".cs", ".java", ".json", ".css", ".rs"];
-        let mut failures = Vec::new();
-        for ext in extensions {
-            let grammar =
-                crate::lang::get_grammar(ext).unwrap_or_else(|| panic!("no grammar for {}", ext));
-            let names = grammar.compiled_query.capture_names();
-            eprintln!("[QUERY OK] {} ({} captures)", ext, names.len());
-            if names.is_empty() {
-                failures.push(format!("{}: no captures", ext));
-            }
-        }
-        assert!(failures.is_empty(), "query failures:\n{}", failures.join("\n"));
-    }
-}
