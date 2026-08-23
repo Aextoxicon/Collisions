@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "uniffi_code_parser"
-crate-type = ["cdylib", "staticlib"]
+crate-type = ["cdylib", "staticlib", "lib"]
 [dependencies]
 tree-sitter = "0.25"
 streaming-iterator = "0.1"
