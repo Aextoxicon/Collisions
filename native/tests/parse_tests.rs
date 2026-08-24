@@ -38,7 +38,6 @@ func main() {
 
 #[test]
 fn test_all_languages_parse_and_highlight() {
-    // 覆盖所有已注册的扩展名，确保每个 grammar 都能 parse + query
     let cases = [
         (".c", "#include <stdio.h>\nint main() { /* c comment */ int x = 1; return 0; }\n"),
         (".h", "#ifndef H\n#define H\nint add(int a, int b); // header comment\n#endif\n"),
@@ -59,6 +58,16 @@ fn test_all_languages_parse_and_highlight() {
         (".json", "{\n  \"key\": \"value\"  // jsonc not std, just test\n}\n"),
         (".css", "/* css comment */\nbody { color: red; }\n"),
         (".rs", "// rust comment\nfn main() { /* block */ let x = 1; }\n"),
+        (".toml", "# toml comment\n[package]\nname = \"test\"\nversion = \"1.0.0\"\n"),
+        (".yaml", "# yaml comment\nkey: value\nlist:\n  - a\n  - b\n"),
+        (".yml", "# yml comment\nkey: value\n"),
+        (".ini", "; ini comment\n[section]\nkey = value\n"),
+        (".mk", "# make comment\nall:\n\techo hello\n"),
+        (".kt", "// kotlin comment\nfun main() {\n    println(\"hi\")  /* block */\n}\n"),
+        (".kts", "// kts comment\nprintln(\"hi\")\n"),
+        (".swift", "// swift comment\nfunc main() { /* block */ print(\"hi\") }\n"),
+        (".html", "<!-- html comment -->\n<div class=\"x\">hi</div>\n"),
+        (".htm", "<!-- htm comment -->\n<p>hello</p>\n"),
     ];
 
     for (ext, source) in cases {
@@ -69,14 +78,12 @@ fn test_all_languages_parse_and_highlight() {
         eprintln!("  total tokens: {}", total_tokens);
 
         // 简单断言：至少有一个 token（C 语言至少能识别 #include 或 comment）
-        // 注意：JSON 标准语法里 // 不是注释，只要没 panic 就算通过
         assert!(
             total_tokens > 0,
             "{}: expected at least 1 highlight token, got 0",
             ext
         );
 
-        // 打印前几行 token 种类用于调试
         for (i, line_tokens) in result.highlights_by_line.iter().enumerate().take(3) {
             let line: &Vec<HighlightToken> = line_tokens;
             let kinds: Vec<String> = line.iter().map(|t: &HighlightToken| format!("{:?}", t.kind)).collect();
@@ -113,7 +120,7 @@ def main():
 #[test]
 fn test_all_queries_compile() {
     // 验证每个 grammar 的 highlight query 都能成功编译
-    let extensions = [".c", ".h", ".cpp", ".hpp", ".go", ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".bash", ".zsh", ".cs", ".java", ".json", ".css", ".rs"];
+    let extensions = [".c", ".h", ".cpp", ".hpp", ".go", ".py", ".js", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".bash", ".zsh", ".cs", ".java", ".json", ".css", ".rs", ".toml", ".yaml", ".yml", ".ini", ".mk", ".kt", ".kts", ".swift", ".html", ".htm"];
     let mut failures = Vec::new();
     for ext in extensions {
         let grammar = uniffi_code_parser::lang::get_grammar(ext)
@@ -189,6 +196,22 @@ fn main() {
     assert!(has_comment, "expected at least one Comment highlight for Chinese comment");
     let has_string = result.highlights_by_line.iter().flatten().any(|t| matches!(t.kind, uniffi_code_parser::HighlightTokenKind::StringLiteral));
     assert!(has_string, "expected at least one StringLiteral highlight for emoji string");
+}
+
+#[test]
+fn test_filename_based_grammars() {
+    use uniffi_code_parser::lang::get_grammar_by_filename;
+
+    for name in ["Dockerfile", "Containerfile", "Makefile", "makefile", "GNUmakefile"] {
+        let grammar = get_grammar_by_filename(name)
+            .unwrap_or_else(|| panic!("no filename-based grammar for {}", name));
+        assert!(
+            !grammar.compiled_query.capture_names().is_empty(),
+            "{}: query has no captures",
+            name
+        );
+        eprintln!("[FILENAME OK] {} ({} captures)", name, grammar.compiled_query.capture_names().len());
+    }
 }
 
 #[test]

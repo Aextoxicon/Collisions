@@ -33,6 +33,9 @@ mod yaml;
 mod ini;
 mod make;
 mod containerfile;
+mod kotlin;
+mod swift;
+mod html;
 
 pub struct GrammarDef {
     pub language: tree_sitter::Language,
@@ -62,6 +65,9 @@ pub fn get_grammar(ext: &str) -> Option<&'static LazyLock<GrammarDef>> {
         ".yaml" | ".yml" => Some(&yaml::GRAMMAR),
         ".ini" => Some(&ini::GRAMMAR),
         ".mk" => Some(&make::GRAMMAR),
+        ".kt" | ".kts" => Some(&kotlin::GRAMMAR),
+        ".swift" => Some(&swift::GRAMMAR),
+        ".html" | ".htm" => Some(&html::GRAMMAR),
         _ => None,
     }
 }
