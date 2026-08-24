@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 // 用法：
 //   grammar!(tree_sitter_go::LANGUAGE, HIGHLIGHT_QUERY)
 macro_rules! grammar {
-    ($lang:expr, $highlight:ident) => {
+    ($lang:expr, $highlight:expr) => {
         ::std::sync::LazyLock::new(|| {
             let query = ::tree_sitter::Query::new(&$lang, $highlight)
                 .expect("invalid highlight query");
@@ -28,6 +28,11 @@ mod java;
 mod json;
 mod css;
 mod rust;
+mod toml;
+mod yaml;
+mod ini;
+mod make;
+mod containerfile;
 
 pub struct GrammarDef {
     pub language: tree_sitter::Language,
@@ -53,6 +58,19 @@ pub fn get_grammar(ext: &str) -> Option<&'static LazyLock<GrammarDef>> {
         ".json" => Some(&json::GRAMMAR),
         ".css" => Some(&css::GRAMMAR),
         ".rs" => Some(&rust::GRAMMAR),
+        ".toml" => Some(&toml::GRAMMAR),
+        ".yaml" | ".yml" => Some(&yaml::GRAMMAR),
+        ".ini" => Some(&ini::GRAMMAR),
+        ".mk" => Some(&make::GRAMMAR),
+        _ => None,
+    }
+}
+
+/// 按文件名（不含路径）查找对应的 grammar 定义
+pub fn get_grammar_by_filename(filename: &str) -> Option<&'static LazyLock<GrammarDef>> {
+    match filename {
+        "Makefile" | "makefile" | "GNUmakefile" => Some(&make::GRAMMAR),
+        "Dockerfile" | "Containerfile" => Some(&containerfile::GRAMMAR),
         _ => None,
     }
 }
