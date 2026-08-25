@@ -27,6 +27,14 @@ data class HighlightToken(
             "CONSTANT_BUILTIN" -> "constant.builtin"
             "LABEL" -> "label"
             "NAMESPACE" -> "namespace"
+            // 新增
+            "BOOLEAN" -> "boolean"
+            "ATTRIBUTE" -> "attribute"
+            "CONDITIONAL" -> "conditional"
+            "REPEAT" -> "repeat"
+            "INCLUDE" -> "include"
+            "KEYWORD_FUNCTION" -> "keyword.function"
+            "EXCEPTION" -> "exception"
             "UNKNOWN" -> "identifier"    // UNKNOWN = "identifier"
             else -> kind.lowercase() // else 直接小写
         }

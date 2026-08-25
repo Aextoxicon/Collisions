@@ -31,6 +31,13 @@ pub enum HighlightTokenKind {
     ConstantBuiltin,
     Label,
     Namespace,
+    Boolean,
+    Attribute,
+    Conditional,
+    Repeat,
+    Include,
+    KeywordFunction,
+    Exception,
     Unknown,
 }
 
@@ -51,9 +58,18 @@ impl HighlightTokenKind {
             "identifier" => HighlightTokenKind::Identifier,
             "variable" => HighlightTokenKind::Variable,
             "property" => HighlightTokenKind::Property,
-            "punctuation" => HighlightTokenKind::Punctuation,
-            "escape" => HighlightTokenKind::Escape,
-            "constant.builtin" => HighlightTokenKind::ConstantBuiltin,
+            "punctuation" | "punctuation.delimiter" | "punctuation.bracket" | "punctuation.special" => HighlightTokenKind::Punctuation,
+            "escape" | "string.escape" => HighlightTokenKind::Escape,
+            "constant.builtin" | "constant" | "constant.macro" => HighlightTokenKind::ConstantBuiltin,
+            // 新增语言（TOML, YAML, Make, Containerfile 等）的额外 capture name
+            "boolean" => HighlightTokenKind::Boolean,
+            "attribute" => HighlightTokenKind::Attribute,
+            "conditional" => HighlightTokenKind::Conditional,
+            "repeat" => HighlightTokenKind::Repeat,
+            "include" => HighlightTokenKind::Include,
+            "keyword.function" => HighlightTokenKind::KeywordFunction,
+            "exception" => HighlightTokenKind::Exception,
+            "string.regex" | "text.danger" | "text.warning" | "text.note" => HighlightTokenKind::StringLiteral,
             _ => {
                 debug_log!("[RUST] unknown capture name: '{}'", s);
                 HighlightTokenKind::Unknown
@@ -429,4 +445,3 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
     );
     result
 }
-

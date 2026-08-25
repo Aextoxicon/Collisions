@@ -49,6 +49,14 @@ object HighlightColor {
         "constant.builtin" to constantBuiltin,
         "label" to label,
         "namespace" to namespace,
+        // 新增语言的高亮类别
+        "boolean" to keyword,
+        "attribute" to keyword,
+        "conditional" to keyword,
+        "repeat" to keyword,
+        "include" to keyword,
+        "keyword.function" to functionBuiltin,
+        "exception" to keyword,
     )
 
     fun colorFor(kind: String): Color = colorMap[kind] ?: plainText
