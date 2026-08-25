@@ -56,9 +56,12 @@ class CodeParserJvmTest {
     }
 
     @Test
-    fun `plain text returns PlainText result`() {
-        val result = parseCode("just some text", "txt")
-        assertTrue(result is CodeParseResult.PlainText, "Expected PlainText, got $result")
+    fun `unknown extension returns Code with empty highlights`() {
+        val result = parseCode("just some text", ".unknown")
+        assertTrue(result is CodeParseResult.Code, "Expected Code, got $result")
+        if (result is CodeParseResult.Code) {
+            assertTrue(result.highlightsByLine.all { it.isEmpty() }, "Expected empty highlights for unknown extension")
+        }
     }
 
     @Test
@@ -188,12 +191,12 @@ class CodeParserJvmTest {
 
     @Test
     fun `unsupported extension returns empty highlights`() {
-        val source = "some kotlin code"
-        val result = parseCode(source, ".kt")
+        val source = "some unknown code"
+        val result = parseCode(source, ".unknown")
 
         assertTrue(result is CodeParseResult.Code, "Expected Code result, got $result")
         if (result is CodeParseResult.Code) {
-            assertTrue(result.highlightsByLine.all { it.isEmpty() }, "Expected empty highlights for unsupported language")
+            assertTrue(result.highlightsByLine.all { it.isEmpty() }, "Expected empty highlights for unsupported extension")
         }
     }
 

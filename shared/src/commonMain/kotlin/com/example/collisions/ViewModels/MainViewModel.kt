@@ -197,10 +197,11 @@ class MainViewModel(
 
         val normalizedContent = content.replace("\t", "    ")
         val ext = artifact.extension
+        val filename = artifact.name
 
         // 解析代码
         val parseResult = try {
-            FileProcessor.process(normalizedContent, ext)
+            FileProcessor.process(normalizedContent, ext, filename)
         } catch (ex: Exception) {
             println("Code parsing failed for ${artifact.name}: ${ex.message}")
             null
