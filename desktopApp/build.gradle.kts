@@ -10,7 +10,7 @@ val nativeLibDir = layout.buildDirectory.dir("nativeLibs/jvm")
 val copyDesktopNativeLib by tasks.registering(Copy::class) {
     dependsOn(":shared:copyJvmNativeLib")
     from(project(":shared").layout.buildDirectory.dir("nativeLibs/jvm"))
-    into(nativeLibDir.map { it.dir("common") })
+    into(nativeLibDir)
 }
 
 dependencies {
