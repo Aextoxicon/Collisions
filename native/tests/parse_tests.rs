@@ -170,8 +170,8 @@ def hello():
     assert!(!result.highlights_by_line.is_empty(), "expected some highlights");
     let total_tokens: usize = result.highlights_by_line.iter().map(|t: &Vec<HighlightToken>| t.len()).sum();
     assert!(total_tokens > 5, "expected more than 5 tokens with unicode, got {}", total_tokens);
-    let has_string = result.highlights_by_line.iter().flatten().any(|t| matches!(t.kind, uniffi_code_parser::HighlightTokenKind::StringLiteral));
-    assert!(has_string, "expected at least one StringLiteral highlight with unicode source");
+    let has_string = result.highlights_by_line.iter().flatten().any(|t| t.kind == "string");
+    assert!(has_string, "expected at least one string highlight with unicode source");
 }
 
 #[test]
@@ -192,10 +192,10 @@ fn main() {
         }
     }
     assert!(!result.highlights_by_line.is_empty(), "expected some highlights");
-    let has_comment = result.highlights_by_line.iter().flatten().any(|t| matches!(t.kind, uniffi_code_parser::HighlightTokenKind::Comment));
-    assert!(has_comment, "expected at least one Comment highlight for Chinese comment");
-    let has_string = result.highlights_by_line.iter().flatten().any(|t| matches!(t.kind, uniffi_code_parser::HighlightTokenKind::StringLiteral));
-    assert!(has_string, "expected at least one StringLiteral highlight for emoji string");
+    let has_comment = result.highlights_by_line.iter().flatten().any(|t| t.kind == "comment");
+    assert!(has_comment, "expected at least one comment highlight for Chinese comment");
+    let has_string = result.highlights_by_line.iter().flatten().any(|t| t.kind == "string");
+    assert!(has_string, "expected at least one string highlight for emoji string");
 }
 
 #[test]

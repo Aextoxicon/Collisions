@@ -11,78 +11,12 @@ macro_rules! debug_log {
     };
 }
 
-//UniFFI types
-#[derive(uniffi::Enum, Debug, Clone)]
-pub enum HighlightTokenKind {
-    Keyword,
-    StringLiteral,
-    Comment,
-    Function,
-    FunctionBuiltin,
-    FunctionMethod,
-    Type,
-    Number,
-    Operator,
-    Identifier,
-    Variable,
-    Property,
-    Punctuation,
-    Escape,
-    ConstantBuiltin,
-    Label,
-    Namespace,
-    Boolean,
-    Attribute,
-    Conditional,
-    Repeat,
-    Include,
-    KeywordFunction,
-    Exception,
-    Unknown,
-}
-
-impl HighlightTokenKind {
-    fn from_str(s: &str) -> Self {
-        match s {
-            "keyword" => HighlightTokenKind::Keyword,
-            "type" | "type.builtin" => HighlightTokenKind::Type,
-            "string" | "string.special" => HighlightTokenKind::StringLiteral,
-            "comment" => HighlightTokenKind::Comment,
-            "function" => HighlightTokenKind::Function,
-            "function.builtin" => HighlightTokenKind::FunctionBuiltin,
-            "function.method" => HighlightTokenKind::FunctionMethod,
-            "number" => HighlightTokenKind::Number,
-            "operator" => HighlightTokenKind::Operator,
-            "label" => HighlightTokenKind::Label,
-            "namespace" => HighlightTokenKind::Namespace,
-            "identifier" => HighlightTokenKind::Identifier,
-            "variable" => HighlightTokenKind::Variable,
-            "property" => HighlightTokenKind::Property,
-            "punctuation" | "punctuation.delimiter" | "punctuation.bracket" | "punctuation.special" => HighlightTokenKind::Punctuation,
-            "escape" | "string.escape" => HighlightTokenKind::Escape,
-            "constant.builtin" | "constant" | "constant.macro" => HighlightTokenKind::ConstantBuiltin,
-            // 新增语言（TOML, YAML, Make, Containerfile 等）的额外 capture name
-            "boolean" => HighlightTokenKind::Boolean,
-            "attribute" => HighlightTokenKind::Attribute,
-            "conditional" => HighlightTokenKind::Conditional,
-            "repeat" => HighlightTokenKind::Repeat,
-            "include" => HighlightTokenKind::Include,
-            "keyword.function" => HighlightTokenKind::KeywordFunction,
-            "exception" => HighlightTokenKind::Exception,
-            "string.regex" | "text.danger" | "text.warning" | "text.note" => HighlightTokenKind::StringLiteral,
-            _ => {
-                debug_log!("[RUST] unknown capture name: '{}'", s);
-                HighlightTokenKind::Unknown
-            }
-        }
-    }
-}
-
+// UniFFI types
 #[derive(uniffi::Record)]
 pub struct HighlightToken {
     pub start_byte: u64,
     pub end_byte: u64,
-    pub kind: HighlightTokenKind,
+    pub kind: String,
 }
 
 #[derive(uniffi::Record)]
@@ -396,7 +330,7 @@ pub fn parse_code(source: String, extension: String) -> CodeParseResult {
                 results.push(HighlightToken {
                     start_byte: node.start_byte() as u64,
                     end_byte: node.end_byte() as u64,
-                    kind: HighlightTokenKind::from_str(kind_str),
+                    kind: kind_str.to_string(),
                 });
             }
         }

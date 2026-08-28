@@ -222,25 +222,4 @@ class CodeParserJvmTest {
         }
     }
 
-    @Test
-    fun `kind mapping works correctly`() {
-        assertEquals("keyword", HighlightToken.mapKind("KEYWORD"))
-        assertEquals("string", HighlightToken.mapKind("STRING_LITERAL"))
-        assertEquals("comment", HighlightToken.mapKind("COMMENT"))
-        assertEquals("function", HighlightToken.mapKind("FUNCTION"))
-        assertEquals("function.builtin", HighlightToken.mapKind("FUNCTION_BUILTIN"))
-        assertEquals("function.method", HighlightToken.mapKind("FUNCTION_METHOD"))
-        assertEquals("type", HighlightToken.mapKind("TYPE"))
-        assertEquals("number", HighlightToken.mapKind("NUMBER"))
-        assertEquals("operator", HighlightToken.mapKind("OPERATOR"))
-        assertEquals("identifier", HighlightToken.mapKind("IDENTIFIER"))
-        assertEquals("variable", HighlightToken.mapKind("VARIABLE"))
-        assertEquals("property", HighlightToken.mapKind("PROPERTY"))
-        assertEquals("punctuation", HighlightToken.mapKind("PUNCTUATION"))
-        assertEquals("escape", HighlightToken.mapKind("ESCAPE"))
-        assertEquals("constant.builtin", HighlightToken.mapKind("CONSTANT_BUILTIN"))
-        assertEquals("label", HighlightToken.mapKind("LABEL"))
-        assertEquals("namespace", HighlightToken.mapKind("NAMESPACE"))
-        assertEquals("identifier", HighlightToken.mapKind("UNKNOWN"))
-    }
 }

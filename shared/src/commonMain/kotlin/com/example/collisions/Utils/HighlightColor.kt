@@ -22,21 +22,24 @@ object HighlightColor {
     val identifier = Color(0xFF24292E)
     val variable = Color(0xFFE36209)
     val property = Color(0xFFEC09BE)
-    val punctuation = Color(0xFF24292E)
+    val punctuation = Color(0xFF8C959F)
     val escape = Color(0xFFE36209)
     val constantBuiltin = Color(0xFF953800)
     val label = Color(0xFFE36209)
     val namespace = Color(0xFF28A745)
     val builtin = Color(0xFF6F42C1)
+    val tag = Color(0xFF22863A)
+    val constructor = Color(0xFF6F42C1)
+    val module = Color(0xFF28A745)
+    val error = Color(0xFFCF222E)
     val plainText = Color(0xFF24292E)
 
     private val colorMap: Map<String, Color> = mapOf(
+        // 一级
         "keyword" to keyword,
         "string" to string,
         "comment" to comment,
         "function" to function,
-        "function.builtin" to functionBuiltin,
-        "function.method" to functionMethod,
         "type" to type,
         "number" to number,
         "operator" to operator,
@@ -46,20 +49,41 @@ object HighlightColor {
         "property" to property,
         "punctuation" to punctuation,
         "escape" to escape,
-        "constant.builtin" to constantBuiltin,
+        "constant" to constantBuiltin,
         "label" to label,
         "namespace" to namespace,
-        // 新增语言的高亮类别
+        "tag" to tag,
+        "constructor" to constructor,
+        "module" to module,
+        "error" to error,
+        "text" to string,
         "boolean" to keyword,
         "attribute" to keyword,
         "conditional" to keyword,
         "repeat" to keyword,
         "include" to keyword,
-        "keyword.function" to functionBuiltin,
         "exception" to keyword,
+        // 细分
+        "function.builtin" to functionBuiltin,
+        "function.method" to functionMethod,
+        "string.escape" to escape,
+        "constant.builtin" to constantBuiltin,
+        "constant.macro" to constantBuiltin,
+        "keyword.function" to functionBuiltin,
     )
 
-    fun colorFor(kind: String): Color = colorMap[kind] ?: plainText
+    fun colorFor(kind: String): Color {
+        colorMap[kind]?.let { return it }
+        // 前缀降级
+        var prefix = kind
+        while (true) {
+            val idx = prefix.lastIndexOf('.')
+            if (idx < 0) break
+            prefix = prefix.substring(0, idx)
+            colorMap[prefix]?.let { return it }
+        }
+        return plainText
+    }
 
     fun toAnnotatedString(
         parseResult: CodeParseResult,
@@ -88,22 +112,19 @@ object HighlightColor {
             for ((lineIndex, line) in lines.withIndex()) {
                 val tokens = if (lineIndex < highlightsByLine.size) highlightsByLine[lineIndex] else emptyList()
                 if (tokens.isEmpty()) {
-                    // 该行无高亮，整行使用默认颜色
                     append(line)
                 } else {
                     var pos = 0
                     for (token in tokens) {
                         val start = token.startByte.toInt()
                         val end = token.endByte.toInt()
-                        // 添加 token 之前的文本（默认颜色）
                         if (start > pos) {
                             withStyle(SpanStyle(color = colorDefault)) {
                                 append(line.substring(pos, start.coerceAtMost(line.length)))
                             }
                         }
-                        // 添加 token 本身（高亮颜色）
                         if (start < end && start < line.length) {
-                            val color = colorFor(HighlightToken.mapKind(token.kind))
+                            val color = colorFor(token.kind)
                             val tokenEnd = end.coerceAtMost(line.length)
                             withStyle(SpanStyle(color = color)) {
                                 append(line.substring(start, tokenEnd))
@@ -111,14 +132,12 @@ object HighlightColor {
                         }
                         pos = end.coerceAtMost(line.length)
                     }
-                    // 行尾剩余文本
                     if (pos < line.length) {
                         withStyle(SpanStyle(color = colorDefault)) {
                             append(line.substring(pos))
                         }
                     }
                 }
-                // 添加换行符（最后一行不加）
                 if (lineIndex < lines.size - 1) {
                     append("\n")
                 }

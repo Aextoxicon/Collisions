@@ -14,7 +14,7 @@ actual fun parseCode(source: String, extension: String): CodeParseResult {
                 HighlightToken(
                     startByte = token.startByte.toLong(),
                     endByte = token.endByte.toLong(),
-                    kind = HighlightToken.mapKind(token.kind.name),
+                    kind = token.kind,
                 )
             }
         },
