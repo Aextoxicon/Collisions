@@ -1,0 +1,93 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 11,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 2,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 3,
+                end_byte: 7,
+                kind: "function",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "variable",
+            },
+            HighlightToken {
+                start_byte: 10,
+                end_byte: 11,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 12,
+                end_byte: 25,
+                kind: "string",
+            },
+            HighlightToken {
+                start_byte: 25,
+                end_byte: 26,
+                kind: "operator",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 11,
+                kind: "function.builtin",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 12,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 13,
+                end_byte: 17,
+                kind: "string",
+            },
+            HighlightToken {
+                start_byte: 19,
+                end_byte: 20,
+                kind: "identifier",
+            },
+            HighlightToken {
+                start_byte: 21,
+                end_byte: 22,
+                kind: "operator",
+            },
+        ],
+        [],
+        [],
+    ],
+    outline: [
+        OutlineNode {
+            kind: "function_item",
+            name: "main",
+            detail: "",
+            start_byte: 12,
+            end_byte: 75,
+            children: [],
+        },
+    ],
+}

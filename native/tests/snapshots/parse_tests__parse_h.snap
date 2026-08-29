@@ -1,0 +1,83 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "identifier",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 10,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "identifier",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 3,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 7,
+                kind: "identifier",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 11,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 12,
+                end_byte: 13,
+                kind: "variable",
+            },
+            HighlightToken {
+                start_byte: 15,
+                end_byte: 18,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 19,
+                end_byte: 20,
+                kind: "variable",
+            },
+            HighlightToken {
+                start_byte: 23,
+                end_byte: 40,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 6,
+                kind: "keyword",
+            },
+        ],
+        [],
+    ],
+    outline: [],
+}

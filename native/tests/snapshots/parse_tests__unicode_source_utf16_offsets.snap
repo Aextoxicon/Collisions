@@ -1,0 +1,90 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 6,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 7,
+                end_byte: 9,
+                kind: "namespace",
+            },
+        ],
+        [],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 3,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 9,
+                kind: "function",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 8,
+                kind: "variable",
+            },
+            HighlightToken {
+                start_byte: 9,
+                end_byte: 10,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 19,
+                kind: "string",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 9,
+                kind: "function",
+            },
+            HighlightToken {
+                start_byte: 10,
+                end_byte: 14,
+                kind: "identifier",
+            },
+            HighlightToken {
+                start_byte: 17,
+                end_byte: 23,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 10,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 15,
+                kind: "identifier",
+            },
+        ],
+        [],
+    ],
+    outline: [
+        OutlineNode {
+            kind: "function_definition",
+            name: "hello",
+            detail: "",
+            start_byte: 11,
+            end_byte: 83,
+            children: [],
+        },
+    ],
+}

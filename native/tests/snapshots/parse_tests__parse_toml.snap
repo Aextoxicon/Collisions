@@ -1,0 +1,78 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 14,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 1,
+                kind: "punctuation.bracket",
+            },
+            HighlightToken {
+                start_byte: 1,
+                end_byte: 8,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "punctuation.bracket",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 4,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 13,
+                kind: "property",
+            },
+            HighlightToken {
+                start_byte: 5,
+                end_byte: 6,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 7,
+                end_byte: 13,
+                kind: "string",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 7,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 17,
+                kind: "property",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 10,
+                end_byte: 17,
+                kind: "string",
+            },
+        ],
+        [],
+    ],
+    outline: [],
+}

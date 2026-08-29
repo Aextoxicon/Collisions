@@ -1,0 +1,34 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 17,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 4,
+                kind: "type",
+            },
+            HighlightToken {
+                start_byte: 7,
+                end_byte: 12,
+                kind: "property",
+            },
+            HighlightToken {
+                start_byte: 14,
+                end_byte: 17,
+                kind: "string",
+            },
+        ],
+        [],
+    ],
+    outline: [],
+}

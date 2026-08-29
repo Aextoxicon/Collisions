@@ -1,0 +1,148 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 3,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 7,
+                kind: "namespace",
+            },
+            HighlightToken {
+                start_byte: 7,
+                end_byte: 9,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 9,
+                end_byte: 12,
+                kind: "constant.builtin",
+            },
+            HighlightToken {
+                start_byte: 12,
+                end_byte: 13,
+                kind: "operator",
+            },
+        ],
+        [],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 3,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 9,
+                kind: "identifier",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 10,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 17,
+                kind: "function",
+            },
+            HighlightToken {
+                start_byte: 20,
+                end_byte: 22,
+                kind: "operator",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 10,
+                kind: "number",
+            },
+        ],
+        [],
+        [],
+        [],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 2,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 3,
+                end_byte: 7,
+                kind: "function",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "variable",
+            },
+            HighlightToken {
+                start_byte: 10,
+                end_byte: 11,
+                kind: "operator",
+            },
+            HighlightToken {
+                start_byte: 12,
+                end_byte: 13,
+                kind: "number",
+            },
+            HighlightToken {
+                start_byte: 13,
+                end_byte: 14,
+                kind: "operator",
+            },
+        ],
+        [],
+        [],
+    ],
+    outline: [
+        OutlineNode {
+            kind: "mod_item",
+            name: "utils",
+            detail: "",
+            start_byte: 15,
+            end_byte: 74,
+            children: [
+                OutlineNode {
+                    kind: "function_item",
+                    name: "helper",
+                    detail: "",
+                    start_byte: 31,
+                    end_byte: 72,
+                    children: [],
+                },
+            ],
+        },
+        OutlineNode {
+            kind: "function_item",
+            name: "main",
+            detail: "",
+            start_byte: 76,
+            end_byte: 104,
+            children: [],
+        },
+    ],
+}

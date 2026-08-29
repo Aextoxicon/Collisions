@@ -1,0 +1,87 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 17,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 3,
+                kind: "keyword.function",
+            },
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 8,
+                kind: "function",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 9,
+                kind: "punctuation.bracket",
+            },
+            HighlightToken {
+                start_byte: 9,
+                end_byte: 10,
+                kind: "punctuation.bracket",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 12,
+                kind: "punctuation.bracket",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 4,
+                end_byte: 11,
+                kind: "function",
+            },
+            HighlightToken {
+                start_byte: 11,
+                end_byte: 12,
+                kind: "punctuation.bracket",
+            },
+            HighlightToken {
+                start_byte: 12,
+                end_byte: 16,
+                kind: "string",
+            },
+            HighlightToken {
+                start_byte: 16,
+                end_byte: 17,
+                kind: "punctuation.bracket",
+            },
+            HighlightToken {
+                start_byte: 19,
+                end_byte: 30,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 1,
+                kind: "punctuation.bracket",
+            },
+        ],
+        [],
+    ],
+    outline: [
+        OutlineNode {
+            kind: "function_declaration",
+            name: "",
+            detail: "",
+            start_byte: 18,
+            end_byte: 63,
+            children: [],
+        },
+    ],
+}

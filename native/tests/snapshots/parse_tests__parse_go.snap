@@ -1,0 +1,77 @@
+---
+source: tests/parse_tests.rs
+expression: result
+---
+CodeParseResult {
+    highlights_by_line: [
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 7,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 8,
+                end_byte: 12,
+                kind: "namespace",
+            },
+        ],
+        [],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 13,
+                kind: "comment",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 0,
+                end_byte: 4,
+                kind: "keyword",
+            },
+            HighlightToken {
+                start_byte: 5,
+                end_byte: 9,
+                kind: "function",
+            },
+        ],
+        [
+            HighlightToken {
+                start_byte: 1,
+                end_byte: 4,
+                kind: "namespace",
+            },
+            HighlightToken {
+                start_byte: 5,
+                end_byte: 12,
+                kind: "function.method",
+            },
+            HighlightToken {
+                start_byte: 13,
+                end_byte: 17,
+                kind: "string",
+            },
+        ],
+        [],
+        [],
+    ],
+    outline: [
+        OutlineNode {
+            kind: "package_clause",
+            name: "",
+            detail: "",
+            start_byte: 0,
+            end_byte: 12,
+            children: [],
+        },
+        OutlineNode {
+            kind: "function_declaration",
+            name: "main",
+            detail: "",
+            start_byte: 28,
+            end_byte: 62,
+            children: [],
+        },
+    ],
+}

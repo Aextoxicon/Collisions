@@ -30,3 +30,6 @@ tree-sitter-toml-ng = "0.7.0"
 tree-sitter-kotlin-sg = "0.4.1"
 tree-sitter-swift = "0.7.3"
 tree-sitter-html = "0.23.2"
+
+[dev-dependencies]
+insta = "1.48.0"

@@ -12,14 +12,14 @@ macro_rules! debug_log {
 }
 
 // UniFFI types
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Debug)]
 pub struct HighlightToken {
     pub start_byte: u64,
     pub end_byte: u64,
     pub kind: String,
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Debug)]
 pub struct OutlineNode {
     pub kind: String,
     pub name: String,
@@ -29,7 +29,7 @@ pub struct OutlineNode {
     pub children: Vec<OutlineNode>,
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Debug)]
 pub struct CodeParseResult {
     // 按需返回每行的高亮 token
     pub highlights_by_line: Vec<Vec<HighlightToken>>,
