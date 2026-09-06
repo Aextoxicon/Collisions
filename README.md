@@ -14,11 +14,11 @@ Because this damn place probably doesn’t have many people looking, I’ll fill
 
 ## 技术栈 / Tech Stack
 
-- KMP+CMP
-- AndroidApp（`androidApp/`）
-- DesktopApp（`desktopApp/`，JVM）
-- Rust 底层库（`native/`），通过 **UniFFI** 生成 Kotlin 绑定
-- iOS 暂不考虑
+KMP+CMP
+AndroidApp（`androidApp/`）
+DesktopApp（`desktopApp/`，JVM）
+Rust 底层库（`native/`），通过 **UniFFI** 生成 Kotlin 绑定
+iOS 暂不考虑
 
 ## 快速开始 / Quick Start
 
